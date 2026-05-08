@@ -1,0 +1,49 @@
+from pydantic_settings import BaseSettings
+from functools import lru_cache
+from typing import List
+
+
+class Settings(BaseSettings):
+    # MongoDB
+    MONGO_URI: str = "mongodb://localhost:27017"
+    DB_NAME: str = "sdg_workflow"
+
+    # JWT
+    JWT_SECRET: str = "your-strong-secret-min-32-chars"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # College
+    COLLEGE_EMAIL_DOMAIN: str = "msrit.edu"
+
+    # CORS
+    ALLOWED_ORIGINS: str = "http://localhost:3000"
+
+    # Redis
+    REDIS_URL: str = "redis://localhost:6379"
+
+    # MinIO
+    MINIO_ENDPOINT: str = "localhost:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_BUCKET: str = "sdg-attachments"
+
+    # Admin seed
+    ADMIN_EMAIL: str = "admin@msrit.edu"
+    ADMIN_PASSWORD: str = "StrongAdminPass123"
+    ADMIN_COLLEGE_ID: str = "ADMIN001"
+
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+
+    model_config = {"env_file": ".env", "extra": "ignore"}
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

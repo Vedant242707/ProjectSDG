@@ -1,0 +1,14 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+beanie>=1.26.0
+motor==3.4.0
+pymongo==4.6.3
+pydantic-settings>=2.2.1
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt==3.2.2
+celery[redis]>=5.3.6
+redis>=5.0.4
+minio>=7.2.7
+python-multipart>=0.0.9
+websockets>=12.0
