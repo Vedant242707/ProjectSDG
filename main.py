@@ -16,6 +16,13 @@ from models.repository import Repository
 from models.submission_counter import SubmissionCounter
 from auth.routes.auth_routes import router as auth_router
 from auth.routes.admin_routes import router as admin_router
+from core.routes.submission_routes import router as submission_router
+from core.routes.workflow_routes import router as workflow_router
+from core.routes.notification_routes import router as notification_router
+from core.routes.ws_routes import router as ws_router
+from core.routes.repository_routes import router as repository_router
+from core.routes.dashboard_routes import router as dashboard_router
+from core.routes.file_routes import router as file_router
 
 
 @asynccontextmanager
@@ -36,6 +43,15 @@ async def lifespan(app: FastAPI):
         ],
     )
     print(f"Connected to MongoDB: {settings.DB_NAME}")
+
+    # Ensure MinIO bucket exists — non-fatal if MinIO is not available yet
+    try:
+        from core.services.file_service import ensure_bucket
+        await ensure_bucket()
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("MinIO not available at startup: %s", exc)
+
     yield
     # Shutdown: close MongoDB connection
     client.close()
@@ -61,6 +77,13 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(admin_router)
+app.include_router(submission_router)
+app.include_router(workflow_router)
+app.include_router(notification_router)
+app.include_router(ws_router)
+app.include_router(repository_router)
+app.include_router(dashboard_router)
+app.include_router(file_router)
 
 
 @app.get("/", tags=["Health"])
