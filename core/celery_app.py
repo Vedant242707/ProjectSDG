@@ -15,3 +15,5 @@ celery.conf.update(
     enable_utc=True,
     beat_schedule={},
 )
+
+celery.autodiscover_tasks(["core.notifications"])
