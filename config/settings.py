@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str = "minioadmin"
     MINIO_SECRET_KEY: str = "minioadmin"
     MINIO_BUCKET: str = "sdg-attachments"
+    MINIO_SECURE: bool = False
 
     # Admin seed
     ADMIN_EMAIL: str = "admin@msrit.edu"

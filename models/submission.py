@@ -31,7 +31,7 @@ class Submission(Document):
     type: SubmissionType
     sdg_tags: List[int] = Field(default_factory=list)
     status: SubmissionStatus = SubmissionStatus.DRAFT
-    attachments: List[str] = Field(default_factory=list)
+    attachments: List[dict] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
