@@ -1,21 +1,7 @@
 version: "3.8"
 
 services:
-  api:
-    build: .
-    container_name: sdg_api
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - mongodb
-      - redis
-      - minio
-    volumes:
-      - .:/app
-    networks:
-      - sdg_network
+  # ── Infrastructure ──────────────────────────────────────────────────────────
 
   mongodb:
     image: mongo:7
@@ -26,6 +12,12 @@ services:
       - mongo_data:/data/db
     networks:
       - sdg_network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -34,33 +26,11 @@ services:
       - "6379:6379"
     networks:
       - sdg_network
-
-  celery_worker:
-    build: .
-    container_name: sdg_celery_worker
-    command: celery -A core.celery_app worker --loglevel=info
-    env_file:
-      - .env
-    depends_on:
-      - redis
-      - mongodb
-    volumes:
-      - .:/app
-    networks:
-      - sdg_network
-
-  celery_beat:
-    build: .
-    container_name: sdg_celery_beat
-    command: celery -A core.celery_app beat --loglevel=info
-    env_file:
-      - .env
-    depends_on:
-      - redis
-    volumes:
-      - .:/app
-    networks:
-      - sdg_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   minio:
     image: minio/minio
@@ -76,16 +46,80 @@ services:
       - minio_data:/data
     networks:
       - sdg_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Application ─────────────────────────────────────────────────────────────
+
+  backend:
+    build: .
+    container_name: sdg_backend
+    # No --reload in production; workers=2 for async FastAPI is sufficient
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    env_file:
+      - .env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - sdg_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  celery_worker:
+    build: .
+    container_name: sdg_celery_worker
+    command: celery -A core.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sdg_network
+
+  celery_beat:
+    build: .
+    container_name: sdg_celery_beat
+    command: celery -A core.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sdg_network
+
+  # ── Frontend + reverse proxy ─────────────────────────────────────────────────
+  # Built from frontend/Dockerfile (node build → nginx:alpine with dist)
+  # nginx.conf is mounted to handle SPA routing, /api proxy, /ws proxy, and SSE.
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: sdg_nginx
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - api
+      backend:
+        condition: service_healthy
     networks:
       - sdg_network
 
