@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str = "StrongAdminPass123"
     ADMIN_COLLEGE_ID: str = "ADMIN001"
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+    FRONTEND_URL: str = "http://localhost:5173"
+
     @property
     def allowed_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]

@@ -10,6 +10,7 @@ class RegisterRequest(BaseModel):
     email: str = Field(..., min_length=1)
     password: str = Field(..., min_length=6)
     confirm_password: str = Field(..., min_length=6)
+    department_id: Optional[str] = None  # user-selected at registration
 
 
 class LoginRequest(BaseModel):

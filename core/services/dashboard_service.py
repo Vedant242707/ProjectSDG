@@ -158,3 +158,111 @@ async def invalidate_dashboard_cache() -> None:
         await redis.delete(_CACHE_KEY)
     finally:
         await redis.aclose()
+
+
+async def get_sdg_detail(sdg_number: int) -> dict:
+    """
+    Return a detailed breakdown for a single SDG:
+    - List of all submissions (in-review + approved) for that SDG
+    - Each entry includes: title, status, submitter email, department name, department code
+    - Aggregate counts by status and by department
+    Public endpoint — no auth required.
+    """
+    from models.department import Department
+    from models.user import User
+
+    sub_col = Submission.get_motor_collection()
+
+    # Fetch all submissions tagged with this SDG (any status)
+    cursor = sub_col.aggregate([
+        {"$match": {"sdg_tags": sdg_number}},
+        {"$project": {
+            "title": 1,
+            "status": 1,
+            "submitter_id": 1,
+            "department_id": 1,
+            "created_at": 1,
+        }},
+        {"$sort": {"created_at": -1}},
+    ])
+    raw_submissions = await cursor.to_list(length=None)
+
+    # Gather unique submitter and department IDs for bulk lookup
+    from bson import ObjectId
+
+    submitter_ids = list({s["submitter_id"] for s in raw_submissions if s.get("submitter_id")})
+    department_ids = list({s["department_id"] for s in raw_submissions if s.get("department_id")})
+
+    # Bulk fetch users and departments
+    user_col = User.get_motor_collection()
+    dept_col = Department.get_motor_collection()
+
+    users_cursor = user_col.find(
+        {"_id": {"$in": submitter_ids}},
+        {"_id": 1, "email": 1, "college_id": 1},
+    )
+    users_list = await users_cursor.to_list(length=None)
+    user_map = {str(u["_id"]): u for u in users_list}
+
+    depts_cursor = dept_col.find(
+        {"_id": {"$in": department_ids}},
+        {"_id": 1, "name": 1, "code": 1},
+    )
+    depts_list = await depts_cursor.to_list(length=None)
+    dept_map = {str(d["_id"]): d for d in depts_list}
+
+    # Build submission list
+    submissions = []
+    status_counts: dict = {}
+    dept_counts: dict = {}
+
+    for s in raw_submissions:
+        sid = str(s.get("submitter_id", ""))
+        did = str(s.get("department_id", ""))
+        user = user_map.get(sid, {})
+        dept = dept_map.get(did, {})
+        status = s.get("status", "UNKNOWN")
+
+        dept_name = dept.get("name", "Unknown Department")
+        dept_code = dept.get("code", "?")
+
+        submissions.append({
+            "title": s.get("title", "(untitled)"),
+            "status": status,
+            "submitter_email": user.get("email", "unknown"),
+            "submitter_college_id": user.get("college_id", ""),
+            "department_name": dept_name,
+            "department_code": dept_code,
+        })
+
+        # Count by status
+        status_counts[status] = status_counts.get(status, 0) + 1
+
+        # Count by department
+        dept_key = dept_code
+        if dept_key not in dept_counts:
+            dept_counts[dept_key] = {"department_name": dept_name, "department_code": dept_code, "count": 0}
+        dept_counts[dept_key]["count"] += 1
+
+    # Status labels mapping
+    STATUS_LABELS = {
+        "DRAFT": "ongoing",
+        "PENDING_HOD": "submitted",
+        "PENDING_COMMITTEE": "submitted",
+        "APPROVED": "approved",
+        "REJECTED": "rejected",
+    }
+    readable_status_counts: dict = {}
+    for status, cnt in status_counts.items():
+        label = STATUS_LABELS.get(status, status.lower())
+        readable_status_counts[label] = readable_status_counts.get(label, 0) + cnt
+
+    return {
+        "sdg_number": sdg_number,
+        "sdg_name": SDG_NAMES.get(sdg_number, f"SDG {sdg_number}"),
+        "total": len(submissions),
+        "status_breakdown": readable_status_counts,
+        "department_breakdown": sorted(dept_counts.values(), key=lambda x: x["count"], reverse=True),
+        "submissions": submissions,
+    }
+

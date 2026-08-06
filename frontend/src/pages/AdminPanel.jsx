@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
-  Search, Plus, Pencil, Trash2, X, AlertTriangle, CheckCircle2, ShieldCheck,
+  Search, Plus, Pencil, Trash2, X, AlertTriangle, CheckCircle2, ShieldCheck, BarChart3,
 } from 'lucide-react'
 import client from '../api/client'
 
@@ -103,7 +103,8 @@ function AssignRoleModal({ user, departments, onSave, onClose }) {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
-  const needsDept = role === 'HOD'
+  // SUBMITTER and HOD both need a department; SDG_COMMITTEE does not
+  const needsDept = role === 'HOD' || role === 'SUBMITTER'
 
   const handleSave = async () => {
     if (needsDept && !deptId) { setError('Please select a department.'); return }
@@ -285,7 +286,7 @@ function DeptFormModal({ dept, onSave, onClose }) {
 function Tabs({ active, onChange }) {
   return (
     <div className="flex border-b border-gray-200">
-      {[['users', 'User Management'], ['depts', 'Departments']].map(([key, label]) => (
+      {[['dashboard', 'Dashboard'], ['users', 'User Management'], ['depts', 'Departments']].map(([key, label]) => (
         <button
           key={key}
           onClick={() => onChange(key)}
@@ -298,6 +299,131 @@ function Tabs({ active, onChange }) {
           {label}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ─── Dashboard tab ────────────────────────────────────────────────────────────
+
+const SDG_COLORS = [
+  '#E5243B', '#DDA63A', '#4C9F38', '#C5192D', '#FF3A21',
+  '#26BDE2', '#FCC30B', '#A21942', '#FD6925', '#DD1367',
+  '#FD9D24', '#BF8B2E', '#3F7E44', '#0A97D9', '#56C02B',
+  '#00689D', '#19486A',
+]
+
+function DashboardTab() {
+  const [summary, setSummary] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    client.get('/dashboard/summary')
+      .then(({ data }) => setSummary(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="space-y-3 py-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-10 animate-pulse rounded-lg bg-gray-200" />
+        ))}
+      </div>
+    )
+  }
+
+  if (!summary) {
+    return <p className="py-8 text-center text-sm text-gray-400">Failed to load dashboard data.</p>
+  }
+
+  const { sdg_breakdown = [], department_breakdown = [], totals = {} } = summary
+
+  return (
+    <div className="space-y-6 py-2">
+      {/* Top-level totals */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Total Submissions', value: totals.total_submissions ?? 0 },
+          { label: 'Approved', value: totals.total_approved ?? 0 },
+          { label: 'In Review', value: totals.total_in_review ?? 0 },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-center">
+            <div className="text-2xl font-extrabold text-gray-900">{value}</div>
+            <div className="mt-0.5 text-xs text-gray-500">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* SDG breakdown table */}
+      <div>
+        <h3 className="mb-3 text-sm font-semibold text-gray-700">SDG Breakdown</h3>
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full min-w-[480px] bg-white">
+            <thead className="bg-gray-50">
+              <tr>
+                <Th>SDG</Th>
+                <Th>Name</Th>
+                <Th>Approved</Th>
+                <Th>In Review</Th>
+                <Th>This Year</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {sdg_breakdown.map(sdg => {
+                const color = SDG_COLORS[sdg.sdg_number - 1]
+                return (
+                  <tr key={sdg.sdg_number} className="hover:bg-gray-50">
+                    <Td>
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-white"
+                        style={{ background: color }}
+                      >
+                        {sdg.sdg_number}
+                      </span>
+                    </Td>
+                    <Td className="font-medium">{sdg.sdg_name}</Td>
+                    <Td>
+                      <span className="font-semibold text-green-700">{sdg.total_approved ?? 0}</span>
+                    </Td>
+                    <Td>
+                      <span className="font-semibold text-blue-700">{sdg.in_review ?? 0}</span>
+                    </Td>
+                    <Td>{sdg.completed_this_year ?? 0}</Td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Department breakdown */}
+      {department_breakdown.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold text-gray-700">Department Breakdown (Approved)</h3>
+          <div className="overflow-x-auto rounded-xl border border-gray-200">
+            <table className="w-full min-w-[360px] bg-white">
+              <thead className="bg-gray-50">
+                <tr>
+                  <Th>Department</Th>
+                  <Th>Code</Th>
+                  <Th>Approved Submissions</Th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {department_breakdown.map(dept => (
+                  <tr key={dept.department_code} className="hover:bg-gray-50">
+                    <Td className="font-medium">{dept.department_name}</Td>
+                    <Td><span className="font-mono text-xs font-semibold tracking-wide text-gray-600">{dept.department_code}</span></Td>
+                    <Td><span className="font-bold text-gray-800">{dept.count}</span></Td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -596,7 +722,7 @@ function DeptsTab({ users }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState('users')
+  const [tab, setTab] = useState('dashboard')
 
   // Pre-load all users so DeptsTab can resolve HOD names without a second fetch.
   // UsersTab also manages its own search-filtered subset.
@@ -612,12 +738,13 @@ export default function AdminPanel() {
     <div className="space-y-0">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage users, roles, and departments.</p>
+        <p className="mt-1 text-sm text-gray-500">Manage users, roles, departments, and view system dashboard.</p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <Tabs active={tab} onChange={setTab} />
         <div className="p-5">
+          {tab === 'dashboard' && <DashboardTab />}
           {tab === 'users' && <UsersTab departments={allDepts} />}
           {tab === 'depts' && <DeptsTab users={allUsers} />}
         </div>

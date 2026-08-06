@@ -63,10 +63,13 @@ async def upload_file(
             detail="File too large. Maximum 10 MB per file.",
         )
 
-    if file.content_type not in _ALLOWED_CONTENT_TYPES:
+    ext = (file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "").strip()
+    allowed_extensions = {"pdf", "jpg", "jpeg", "png", "gif", "doc", "docx"}
+    
+    if file.content_type not in _ALLOWED_CONTENT_TYPES and ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type '{file.content_type}' is not allowed.",
+            detail=f"File type '{file.content_type}' or extension '.{ext}' is not allowed. Only PDF, JPEG, PNG, GIF, and Word files are permitted.",
         )
 
     submission = await Submission.get(PydanticObjectId(submission_id))

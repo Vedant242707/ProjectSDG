@@ -103,12 +103,13 @@ export function AuthProvider({ children }) {
     return userData
   }
 
-  const register = async (college_id, email, password, confirm_password) => {
+  const register = async (college_id, email, password, confirm_password, department_id) => {
     const { data } = await client.post('/auth/register', {
       college_id,
       email,
       password,
       confirm_password,
+      ...(department_id ? { department_id } : {}),
     })
     return data
   }
@@ -124,9 +125,20 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const loginWithTokens = (accessToken, refreshToken) => {
+    localStorage.setItem(KEYS.ACCESS, accessToken)
+    localStorage.setItem(KEYS.REFRESH, refreshToken)
+    const userData = buildUserFromToken(accessToken, null)
+    if (userData) {
+      localStorage.setItem(KEYS.USER, JSON.stringify(userData))
+      setUser(userData)
+    }
+    return userData
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAuthenticated: Boolean(user), login, register, logout }}
+      value={{ user, loading, isAuthenticated: Boolean(user), login, loginWithTokens, register, logout }}
     >
       {children}
     </AuthContext.Provider>

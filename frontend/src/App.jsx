@@ -14,6 +14,7 @@ import ReviewQueue from './pages/ReviewQueue'
 import Notifications from './pages/Notifications'
 import AdminPanel from './pages/AdminPanel'
 import NotFound from './pages/NotFound'
+import SdgDetail from './pages/SdgDetail'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/sdg/:number" element={<SdgDetail />} />
 
             {/* ── Authenticated app — inside Layout shell ── */}
             <Route element={<Layout />}>

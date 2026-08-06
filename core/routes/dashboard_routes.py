@@ -61,3 +61,15 @@ async def get_sdg_stats(sdg_number: int):
         if entry["sdg_number"] == sdg_number:
             return entry
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SDG entry not found")
+
+
+@router.get("/sdg/{sdg_number}/details")
+async def get_sdg_details(sdg_number: int):
+    """Public endpoint. Returns full per-department and per-submitter breakdown for a single SDG."""
+    if sdg_number < 1 or sdg_number > 17:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="SDG number must be between 1 and 17",
+        )
+    return await dashboard_service.get_sdg_detail(sdg_number)
+
