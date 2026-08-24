@@ -16,6 +16,7 @@ from core.notifications.tasks import (
     notify_committee_approved,
     notify_committee_rejected,
     notify_hod_approved,
+    notify_hod_resubmitted_to_committee,
     notify_hod_new_submission,
     notify_hod_rejected,
     notify_submission_created,
@@ -27,6 +28,14 @@ from core.workflow.state_machine import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _queue_notification(task, *args) -> None:
+    """Queue a notification without allowing broker outages to fail workflow actions."""
+    try:
+        task.delay(*args)
+    except Exception as exc:
+        logger.warning("Unable to queue notification %s: %s", getattr(task, "name", task), exc)
 
 
 async def execute_transition(
@@ -113,16 +122,19 @@ async def execute_transition(
 
     if new_status == SubmissionStatus.PENDING_HOD:
         if old_status == SubmissionStatus.DRAFT:
-            notify_submission_created.delay(_submitter_id, _sub_id, _human_id)
-        notify_hod_new_submission.delay(_dept_id, actor.college_id, _sub_id, _human_id)
+            _queue_notification(notify_submission_created, _submitter_id, _sub_id, _human_id)
+        _queue_notification(notify_hod_new_submission, _dept_id, actor.college_id, _sub_id, _human_id)
     elif new_status == SubmissionStatus.PENDING_COMMITTEE:
-        notify_hod_approved.delay(_submitter_id, _sub_id, _human_id)
+        if old_status == SubmissionStatus.REJECTED_COMM:
+            _queue_notification(notify_hod_resubmitted_to_committee, _submitter_id, _sub_id, _human_id)
+        else:
+            _queue_notification(notify_hod_approved, _submitter_id, _sub_id, _human_id)
     elif new_status == SubmissionStatus.APPROVED:
-        notify_committee_approved.delay(_submitter_id, _dept_id, _sub_id, _human_id)
+        _queue_notification(notify_committee_approved, _submitter_id, _dept_id, _sub_id, _human_id)
     elif new_status == SubmissionStatus.REJECTED_HOD:
-        notify_hod_rejected.delay(_submitter_id, _sub_id, _human_id, note or "")
+        _queue_notification(notify_hod_rejected, _submitter_id, _sub_id, _human_id, note or "")
     elif new_status == SubmissionStatus.REJECTED_COMM:
-        notify_committee_rejected.delay(_dept_id, _sub_id, _human_id, note or "")
+        _queue_notification(notify_committee_rejected, _dept_id, _sub_id, _human_id, note or "")
 
     # Phase 4: Snapshot approved submission into the immutable repository
     if new_status == SubmissionStatus.APPROVED:

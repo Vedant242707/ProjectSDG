@@ -13,22 +13,6 @@ const SDG_COLORS = [
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
-const STATUS_STYLES = {
-  ongoing:   'bg-yellow-50 text-yellow-700 border border-yellow-200',
-  submitted: 'bg-blue-50 text-blue-700 border border-blue-200',
-  approved:  'bg-green-50 text-green-700 border border-green-200',
-  rejected:  'bg-red-50 text-red-700 border border-red-200',
-}
-
-function StatusBadge({ status }) {
-  const style = STATUS_STYLES[status] ?? 'bg-gray-50 text-gray-700 border border-gray-200'
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${style}`}>
-      {status}
-    </span>
-  )
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function SdgDetail() {
@@ -113,25 +97,10 @@ export default function SdgDetail() {
                 </span>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{data.sdg_name}</h1>
-                  <p className="mt-1 text-sm text-gray-500">{data.total} total submission{data.total !== 1 ? 's' : ''}</p>
+                  <p className="mt-1 text-sm text-gray-500">{data.total} approved project{data.total !== 1 ? 's' : ''}</p>
                 </div>
               </div>
             </div>
-
-            {/* Status breakdown */}
-            {Object.keys(data.status_breakdown ?? {}).length > 0 && (
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                <h2 className="mb-4 text-base font-semibold text-gray-900">Breakdown by Status</h2>
-                <div className="flex flex-wrap gap-3">
-                  {Object.entries(data.status_breakdown).map(([status, count]) => (
-                    <div key={status} className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-4 py-2">
-                      <StatusBadge status={status} />
-                      <span className="text-sm font-semibold text-gray-700">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Department breakdown */}
             {data.department_breakdown?.length > 0 && (
@@ -158,11 +127,11 @@ export default function SdgDetail() {
             {/* Submission list */}
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
               <div className="border-b border-gray-100 px-5 py-4">
-                <h2 className="text-base font-semibold text-gray-900">All Submissions</h2>
+                <h2 className="text-base font-semibold text-gray-900">Approved Projects</h2>
               </div>
 
               {data.submissions?.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-gray-400">No submissions yet for this SDG.</p>
+                <p className="px-5 py-8 text-center text-sm text-gray-400">No approved projects yet for this SDG.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[560px]">
@@ -171,7 +140,6 @@ export default function SdgDetail() {
                         <th className="whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Title</th>
                         <th className="whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Department</th>
                         <th className="whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Submitted by</th>
-                        <th className="whitespace-nowrap px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -183,9 +151,6 @@ export default function SdgDetail() {
                             <span className="ml-1.5 font-mono text-xs text-gray-400">{sub.department_code}</span>
                           </td>
                           <td className="px-5 py-3 text-sm text-gray-600">{sub.submitter_email}</td>
-                          <td className="px-5 py-3">
-                            <StatusBadge status={sub.status?.toLowerCase?.() ?? sub.status} />
-                          </td>
                         </tr>
                       ))}
                     </tbody>

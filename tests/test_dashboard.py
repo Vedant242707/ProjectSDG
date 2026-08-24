@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from core.services.dashboard_service import get_dashboard_summary
+from core.services.dashboard_service import get_dashboard_summary, get_sdg_detail
 from core.services.workflow_service import execute_transition
 from models.submission import Submission, SubmissionStatus, SubmissionType
 from models.workflow_event import WorkflowAction
@@ -90,6 +90,16 @@ class TestDashboardSummary:
         sdg_map = {e["sdg_number"]: e for e in summary["sdg_breakdown"]}
         assert sdg_map[13]["in_review"] == 1
         assert sdg_map[13]["total_approved"] == 0
+
+    async def test_public_sdg_detail_excludes_unapproved_submissions(self, seed_data):
+        approved = await _make_submission(seed_data, "SDG-2026-CS-PUB1", [4], title="Approved project")
+        draft = await _make_submission(seed_data, "SDG-2026-CS-PUB2", [4], title="Private draft")
+        await _approve(approved, seed_data)
+
+        detail = await get_sdg_detail(4)
+
+        assert detail["total"] == 1
+        assert [submission["title"] for submission in detail["submissions"]] == ["Approved project"]
 
     async def test_dashboard_department_breakdown(self, seed_data):
         cs_sub = await _make_submission(seed_data, "SDG-2026-CS-DB1", [4])

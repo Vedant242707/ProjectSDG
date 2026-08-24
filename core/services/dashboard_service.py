@@ -49,7 +49,8 @@ async def get_dashboard_summary() -> dict:
     ])
     approved_results = await approved_cursor.to_list(length=None)
 
-    # b) Per-SDG in-review counts (Submission collection)
+    # b) Internal in-review counts are retained for the admin panel, but the
+    # public landing page only renders approved entries below.
     in_review_cursor = sub_col.aggregate([
         {"$match": {"status": {"$in": ["PENDING_HOD", "PENDING_COMMITTEE"]}}},
         {"$unwind": "$sdg_tags"},
@@ -162,8 +163,8 @@ async def invalidate_dashboard_cache() -> None:
 
 async def get_sdg_detail(sdg_number: int) -> dict:
     """
-    Return a detailed breakdown for a single SDG:
-    - List of all submissions (in-review + approved) for that SDG
+    Return a public detailed breakdown for a single SDG:
+    - List of approved submissions for that SDG only
     - Each entry includes: title, status, submitter email, department name, department code
     - Aggregate counts by status and by department
     Public endpoint — no auth required.
@@ -173,9 +174,10 @@ async def get_sdg_detail(sdg_number: int) -> dict:
 
     sub_col = Submission.get_motor_collection()
 
-    # Fetch all submissions tagged with this SDG (any status)
+    # The public dashboard must never disclose drafts, reviews, or rejected
+    # work. Repository entries are created only after final approval.
     cursor = sub_col.aggregate([
-        {"$match": {"sdg_tags": sdg_number}},
+        {"$match": {"sdg_tags": sdg_number, "status": "APPROVED"}},
         {"$project": {
             "title": 1,
             "status": 1,
@@ -188,8 +190,6 @@ async def get_sdg_detail(sdg_number: int) -> dict:
     raw_submissions = await cursor.to_list(length=None)
 
     # Gather unique submitter and department IDs for bulk lookup
-    from bson import ObjectId
-
     submitter_ids = list({s["submitter_id"] for s in raw_submissions if s.get("submitter_id")})
     department_ids = list({s["department_id"] for s in raw_submissions if s.get("department_id")})
 
@@ -265,4 +265,3 @@ async def get_sdg_detail(sdg_number: int) -> dict:
         "department_breakdown": sorted(dept_counts.values(), key=lambda x: x["count"], reverse=True),
         "submissions": submissions,
     }
-

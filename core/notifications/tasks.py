@@ -1,10 +1,10 @@
 import asyncio
 
 from beanie import PydanticObjectId, init_beanie
-from celery import shared_task
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from config.settings import settings
+from core.celery_app import celery
 from models.department import Department
 from models.notification import Notification
 from models.submission import Submission
@@ -38,7 +38,7 @@ async def _create_notification(
     return notif
 
 
-@shared_task(name="notify_submission_created")
+@celery.task(name="notify_submission_created")
 def notify_submission_created(
     submitter_id: str,
     submission_id_str: str,
@@ -59,7 +59,7 @@ def notify_submission_created(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_hod_new_submission")
+@celery.task(name="notify_hod_new_submission")
 def notify_hod_new_submission(
     department_id: str,
     submitter_name: str,
@@ -83,7 +83,7 @@ def notify_hod_new_submission(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_hod_approved")
+@celery.task(name="notify_hod_approved")
 def notify_hod_approved(
     submitter_id: str,
     submission_id_str: str,
@@ -111,7 +111,35 @@ def notify_hod_approved(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_hod_rejected")
+@celery.task(name="notify_hod_resubmitted_to_committee")
+def notify_hod_resubmitted_to_committee(
+    submitter_id: str,
+    submission_id_str: str,
+    submission_human_id: str,
+) -> None:
+    """Notify submitter and committee when HOD returns a committee-rejected item."""
+    async def _run():
+        client = await _init_db()
+        try:
+            await _create_notification(
+                submitter_id,
+                f"Your submission {submission_human_id} has been revised by the HOD and resubmitted to the SDG Committee.",
+                submission_id_str,
+            )
+            committee_members = await User.find(User.role == Role.SDG_COMMITTEE).to_list()
+            for member in committee_members:
+                await _create_notification(
+                    member.id,
+                    f"Submission {submission_human_id} has been resubmitted by the HOD and is awaiting your review.",
+                    submission_id_str,
+                )
+        finally:
+            client.close()
+
+    asyncio.run(_run())
+
+
+@celery.task(name="notify_hod_rejected")
 def notify_hod_rejected(
     submitter_id: str,
     submission_id_str: str,
@@ -133,7 +161,7 @@ def notify_hod_rejected(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_committee_approved")
+@celery.task(name="notify_committee_approved")
 def notify_committee_approved(
     submitter_id: str,
     department_id: str,
@@ -162,7 +190,7 @@ def notify_committee_approved(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_committee_rejected")
+@celery.task(name="notify_committee_rejected")
 def notify_committee_rejected(
     department_id: str,
     submission_id_str: str,
@@ -186,7 +214,7 @@ def notify_committee_rejected(
     asyncio.run(_run())
 
 
-@shared_task(name="notify_resubmitted")
+@celery.task(name="notify_resubmitted")
 def notify_resubmitted(
     target_user_id: str,
     submission_id_str: str,

@@ -20,6 +20,7 @@ _CELERY_TASK_PATHS = [
     "core.services.workflow_service.notify_submission_created",
     "core.services.workflow_service.notify_hod_new_submission",
     "core.services.workflow_service.notify_hod_approved",
+    "core.services.workflow_service.notify_hod_resubmitted_to_committee",
     "core.services.workflow_service.notify_committee_approved",
     "core.services.workflow_service.notify_hod_rejected",
     "core.services.workflow_service.notify_committee_rejected",
@@ -36,7 +37,8 @@ def mock_celery_tasks():
     """
     with patch(_CELERY_TASK_PATHS[0]), patch(_CELERY_TASK_PATHS[1]), \
          patch(_CELERY_TASK_PATHS[2]), patch(_CELERY_TASK_PATHS[3]), \
-         patch(_CELERY_TASK_PATHS[4]), patch(_CELERY_TASK_PATHS[5]):
+         patch(_CELERY_TASK_PATHS[4]), patch(_CELERY_TASK_PATHS[5]), \
+         patch(_CELERY_TASK_PATHS[6]):
         yield
 
 

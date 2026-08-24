@@ -104,6 +104,21 @@ class TestRejectionFlow:
         result = await execute_transition(sub_id, WorkflowAction.APPROVE, seed_data["committee"])
         assert result.status == SubmissionStatus.APPROVED
 
+    async def test_hod_can_return_committee_rejection_to_submitter(self, draft_submission, seed_data):
+        sub_id = str(draft_submission.id)
+        await execute_transition(sub_id, WorkflowAction.SUBMIT, seed_data["submitter"])
+        await execute_transition(sub_id, WorkflowAction.APPROVE, seed_data["hod_cs"])
+        await execute_transition(
+            sub_id, WorkflowAction.REJECT, seed_data["committee"],
+            note="Please strengthen the evidence supporting the stated SDG impact",
+        )
+
+        result = await execute_transition(
+            sub_id, WorkflowAction.REJECT, seed_data["hod_cs"],
+            note="Please revise the impact evidence before this can be resubmitted",
+        )
+        assert result.status == SubmissionStatus.REJECTED_HOD
+
 
 class TestConcurrency:
     async def test_double_approve_race(self, draft_submission, seed_data):

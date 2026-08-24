@@ -14,8 +14,7 @@ const SDG_COLORS = [
 // ─── SDG Card — just name + total count ───────────────────────────────────────
 
 function SdgCard({ sdg }) {
-  // total = approved + in_review (all statuses combined)
-  const total = (sdg.total_approved ?? 0) + (sdg.in_review ?? 0)
+  const total = sdg.total_approved ?? 0
   const color = SDG_COLORS[sdg.sdg_number - 1]
 
   return (
@@ -36,7 +35,7 @@ function SdgCard({ sdg }) {
         <div className="text-center text-2xl font-extrabold" style={{ color }}>
           {total}
         </div>
-        <p className="mt-0.5 text-center text-xs text-gray-400">submissions</p>
+        <p className="mt-0.5 text-center text-xs text-gray-400">approved projects</p>
       </div>
     </Link>
   )

@@ -14,7 +14,7 @@ const client = axios.create({
 // Attach Bearer token from localStorage on every request
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem(KEYS.ACCESS)
-  if (token) config.headers.Authorization = `Bearer ${token}`
+  if (token && !config.skipAuth) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -24,7 +24,12 @@ client.interceptors.response.use(
   async (err) => {
     const original = err.config
 
-    if (err.response?.status === 401 && !original._retry) {
+    // A failed sign-in or registration is an expected form error.  Trying to
+    // refresh a previous session here clears storage and reloads /login, which
+    // makes the credentials the user just entered appear to have vanished.
+    const isAuthFormRequest = original?.url === '/auth/login' || original?.url === '/auth/register'
+
+    if (err.response?.status === 401 && !original._retry && !isAuthFormRequest) {
       original._retry = true
 
       const refreshToken = localStorage.getItem(KEYS.REFRESH)

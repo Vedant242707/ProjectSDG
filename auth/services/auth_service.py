@@ -18,7 +18,15 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    # OAuth-created accounts intentionally have no password hash.  Treat an
+    # attempted password login as invalid credentials rather than returning a
+    # server error from passlib.
+    if not hashed_password:
+        return False
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(user: User) -> str:

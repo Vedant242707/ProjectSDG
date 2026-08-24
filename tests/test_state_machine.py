@@ -50,6 +50,10 @@ class TestRejectionPaths:
         result = transition(SubmissionStatus.REJECTED_COMM, WorkflowAction.RESUBMIT, Role.HOD)
         assert result == SubmissionStatus.PENDING_COMMITTEE
 
+    def test_hod_can_return_committee_rejection_to_submitter(self):
+        result = transition(SubmissionStatus.REJECTED_COMM, WorkflowAction.REJECT, Role.HOD)
+        assert result == SubmissionStatus.REJECTED_HOD
+
     def test_full_reject_resubmit_approve_cycle(self):
         status = SubmissionStatus.DRAFT
         status = transition(status, WorkflowAction.SUBMIT, Role.SUBMITTER)

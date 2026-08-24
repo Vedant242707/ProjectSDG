@@ -12,6 +12,10 @@ TRANSITIONS: dict[tuple[SubmissionStatus, WorkflowAction], tuple[SubmissionStatu
     (SubmissionStatus.PENDING_COMMITTEE,   WorkflowAction.APPROVE):  (SubmissionStatus.APPROVED,           frozenset({Role.SDG_COMMITTEE})),
     (SubmissionStatus.PENDING_COMMITTEE,   WorkflowAction.REJECT):   (SubmissionStatus.REJECTED_COMM,      frozenset({Role.SDG_COMMITTEE})),
     (SubmissionStatus.REJECTED_HOD,        WorkflowAction.RESUBMIT): (SubmissionStatus.PENDING_HOD,        frozenset({Role.SUBMITTER})),
+    # A committee rejection is returned to the HOD.  The HOD may either
+    # address the feedback and return it to the committee, or reject it back
+    # to the submitter with an HOD note.
+    (SubmissionStatus.REJECTED_COMM,       WorkflowAction.REJECT):   (SubmissionStatus.REJECTED_HOD,       frozenset({Role.HOD})),
     (SubmissionStatus.REJECTED_COMM,       WorkflowAction.RESUBMIT): (SubmissionStatus.PENDING_COMMITTEE,  frozenset({Role.HOD})),
 }
 

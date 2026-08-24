@@ -90,7 +90,10 @@ export function AuthProvider({ children }) {
     // instance default Content-Type is application/json.
     const body = new URLSearchParams({ username: email, password }).toString()
     const { data } = await client.post('/auth/login', body, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      skipAuth: true,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     })
     localStorage.setItem(KEYS.ACCESS, data.access_token)
     localStorage.setItem(KEYS.REFRESH, data.refresh_token)

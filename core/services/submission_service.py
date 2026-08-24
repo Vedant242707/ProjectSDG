@@ -114,7 +114,10 @@ async def list_pending_for_review(user: User) -> list[Submission]:
     if user.role == Role.HOD:
         return (
             await Submission.find(
-                {"department_id": {"$in": user.department_ids}, "status": SubmissionStatus.PENDING_HOD}
+                {
+                    "department_id": {"$in": user.department_ids},
+                    "status": {"$in": [SubmissionStatus.PENDING_HOD, SubmissionStatus.REJECTED_COMM]},
+                }
             )
             .sort(+Submission.created_at)
             .to_list()

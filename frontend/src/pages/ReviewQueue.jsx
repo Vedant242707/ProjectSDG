@@ -28,9 +28,12 @@ function Toast({ toasts }) {
 
 function ApproveModal({ submission, onConfirm, onClose, loading }) {
   const [note, setNote] = useState('')
+  const isCommitteeReturn = submission.status === 'REJECTED_COMM'
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-1 text-lg font-semibold text-gray-900">Approve submission?</h2>
+      <h2 className="mb-1 text-lg font-semibold text-gray-900">
+        {isCommitteeReturn ? 'Resubmit to committee?' : 'Approve submission?'}
+      </h2>
       <p className="mb-4 text-sm text-gray-500 truncate">
         <span className="font-medium text-gray-700">{submission.title}</span>
         {' · '}
@@ -43,7 +46,7 @@ function ApproveModal({ submission, onConfirm, onClose, loading }) {
         rows={3}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Any remarks for the submitter…"
+        placeholder={isCommitteeReturn ? 'Any response to the committee feedback…' : 'Any remarks for the submitter…'}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
       />
       <div className="mt-5 flex justify-end gap-3">
@@ -60,7 +63,7 @@ function ApproveModal({ submission, onConfirm, onClose, loading }) {
           className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
         >
           {loading && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-          Approve
+          {isCommitteeReturn ? 'Resubmit' : 'Approve'}
         </button>
       </div>
     </Modal>
@@ -73,12 +76,15 @@ const MIN_NOTE = 10
 
 function RejectModal({ submission, onConfirm, onClose, loading }) {
   const [note, setNote] = useState('')
+  const isCommitteeReturn = submission.status === 'REJECTED_COMM'
   const tooShort = note.trim().length > 0 && note.trim().length < MIN_NOTE
   const canSubmit = note.trim().length >= MIN_NOTE
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-1 text-lg font-semibold text-gray-900">Reject submission?</h2>
+      <h2 className="mb-1 text-lg font-semibold text-gray-900">
+        {isCommitteeReturn ? 'Return to submitter?' : 'Reject submission?'}
+      </h2>
       <p className="mb-4 text-sm text-gray-500 truncate">
         <span className="font-medium text-gray-700">{submission.title}</span>
         {' · '}
@@ -91,7 +97,9 @@ function RejectModal({ submission, onConfirm, onClose, loading }) {
         rows={4}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Explain why this submission is being rejected (min. 10 characters)…"
+        placeholder={isCommitteeReturn
+          ? 'Explain what the submitter needs to revise (min. 10 characters)…'
+          : 'Explain why this submission is being rejected (min. 10 characters)…'}
         className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
           tooShort
             ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
@@ -173,6 +181,7 @@ function SdgChip({ n }) {
 // ─── Submission card ──────────────────────────────────────────────────────────
 
 function SubmissionCard({ sub, onApprove, onReject }) {
+  const isCommitteeReturn = sub.status === 'REJECTED_COMM'
   const submitted = sub.updated_at ?? sub.created_at
   const dateStr = submitted ? new Date(submitted).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 
@@ -222,14 +231,14 @@ function SubmissionCard({ sub, onApprove, onReject }) {
           className="flex items-center gap-1.5 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
         >
           <XCircle className="h-4 w-4" />
-          Reject
+          {isCommitteeReturn ? 'Return to Submitter' : 'Reject'}
         </button>
         <button
           onClick={() => onApprove(sub)}
           className="flex items-center gap-1.5 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
         >
           <CheckCircle className="h-4 w-4" />
-          Approve
+          {isCommitteeReturn ? 'Resubmit to Committee' : 'Approve'}
         </button>
       </div>
     </div>
@@ -259,7 +268,7 @@ export default function ReviewQueue() {
   const [actionLoading, setActionLoading] = useState(false)
 
   const isHod = user?.role === 'HOD'
-  const heading = isHod ? 'Pending Your Review (Department)' : 'Pending Committee Review'
+  const heading = isHod ? 'Department Review Queue' : 'Pending Committee Review'
 
   const pushToast = useCallback((message, type = 'success') => {
     const id = Date.now()
@@ -284,9 +293,11 @@ export default function ReviewQueue() {
   const handleApprove = async (note) => {
     setActionLoading(true)
     try {
-      await client.post(`/submissions/${modal.submission._id}/approve`, { note: note || '' })
+      const isCommitteeReturn = modal.submission.status === 'REJECTED_COMM'
+      const action = isCommitteeReturn ? 'resubmit' : 'approve'
+      await client.post(`/submissions/${modal.submission._id}/${action}`, { note: note || '' })
       setSubmissions((prev) => prev.filter((s) => s._id !== modal.submission._id))
-      pushToast('Submission approved.')
+      pushToast(isCommitteeReturn ? 'Submission resubmitted to the committee.' : 'Submission approved.')
       setModal(null)
     } catch (err) {
       pushToast(err.response?.data?.detail ?? 'Approval failed.', 'error')
@@ -300,7 +311,9 @@ export default function ReviewQueue() {
     try {
       await client.post(`/submissions/${modal.submission._id}/reject`, { note })
       setSubmissions((prev) => prev.filter((s) => s._id !== modal.submission._id))
-      pushToast('Submission rejected and returned.')
+      pushToast(modal.submission.status === 'REJECTED_COMM'
+        ? 'Submission returned to the submitter.'
+        : 'Submission rejected and returned.')
       setModal(null)
     } catch (err) {
       pushToast(err.response?.data?.detail ?? 'Rejection failed.', 'error')

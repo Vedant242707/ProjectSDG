@@ -506,6 +506,9 @@ celery -A core.celery_app worker --loglevel=info
 
 # Seed admin user
 python scripts/seed_admin.py
+
+# Seed the submitter, HOD, and committee accounts used to test the full workflow
+python scripts/seed_test_users.py
 ```
 
 ```bash
@@ -516,6 +519,21 @@ npm run dev
 ```
 
 Frontend dev server runs on `http://localhost:5173` with API proxy to `:8000`.
+
+### Workflow test accounts
+
+Run `python scripts/seed_test_users.py` after the database is available. It
+creates (or resets) the following local test accounts and assigns the submitter
+and HOD to the same **Workflow Test Department**:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Submitter | `submitter.test@msrit.edu` | `Testing123!` |
+| HOD | `hod.test@msrit.edu` | `Testing123!` |
+| SDG Committee | `committee.test@msrit.edu` | `Testing123!` |
+
+Use them in this order: create and submit as the submitter, approve or reject
+as the HOD, then approve or reject as the committee account.
 
 ---
 
