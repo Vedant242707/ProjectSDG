@@ -572,6 +572,11 @@ the OAuth client in Google Cloud Console, then set `GOOGLE_CLIENT_ID` and
 allows only verified `@msrit.edu` addresses. Password sign-in, registration,
 token refresh, and Google sign-in all enforce the same domain rule.
 
+To move the application to a different URL later, update `FRONTEND_URL` and
+`GOOGLE_REDIRECT_URI` in `.env`, then add the exact new callback URI to the
+same Google OAuth client's authorised redirect URIs. Keep `GOOGLE_CLIENT_ID`
+and `GOOGLE_CLIENT_SECRET` in `.env` only; never commit them.
+
 ---
 
 ## Deployment

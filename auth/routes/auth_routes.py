@@ -89,26 +89,26 @@ async def register(body: RegisterRequest):
             detail="Email is already registered",
         )
 
-    # Create user
+    # A department is required so a newly registered submitter can immediately
+    # create a submission and route it to the correct HOD.
+    try:
+        dept_oid = PydanticObjectId(body.department_id)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid department")
+
+    dept = await Department.get(dept_oid)
+    if not dept:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected department does not exist")
+
+    # Create user with their selected department.
     user = User(
         college_id=body.college_id,
         email=body.email.strip().lower(),
         hashed_password=hash_password(body.password),
         role=Role.SUBMITTER,
-        department_ids=[],
+        department_ids=[dept_oid],
     )
     await user.insert()
-
-    # Optionally assign the department the user selected during registration
-    if body.department_id:
-        try:
-            dept_oid = PydanticObjectId(body.department_id)
-            dept = await Department.get(dept_oid)
-            if dept:
-                user.department_ids = [dept_oid]
-                await user.save()
-        except Exception:
-            pass  # invalid ID — silently ignore, user can update later
 
     return _user_to_response(user)
 

@@ -5,12 +5,13 @@ import { useAuth } from '../context/AuthContext'
 
 const COLLEGE_DOMAIN = '@msrit.edu'
 
-function validate({ college_id, email, password, confirm_password }) {
+function validate({ college_id, email, password, confirm_password }, departmentId) {
   if (!college_id.trim()) return 'College ID is required.'
   if (!email.toLowerCase().endsWith(COLLEGE_DOMAIN))
     return `Email must be a college email ending in ${COLLEGE_DOMAIN}`
   if (password.length < 8) return 'Password must be at least 8 characters.'
   if (password !== confirm_password) return 'Passwords do not match.'
+  if (!departmentId) return 'Please select your department.'
   return null
 }
 
@@ -44,7 +45,7 @@ export default function Register() {
     e.preventDefault()
     setError('')
 
-    const validationError = validate(form)
+    const validationError = validate(form, departmentId)
     if (validationError) { setError(validationError); return }
 
     setLoading(true)
@@ -150,13 +151,14 @@ export default function Register() {
               )}
             </Field>
 
-            {/* ── Department selection (optional) ────────────────────────── */}
+            {/* ── Department selection ───────────────────────────────────── */}
             <div>
               <label htmlFor="department" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Department <span className="text-gray-400 font-normal">(optional)</span>
+                Department <span className="text-red-500">*</span>
               </label>
               <select
                 id="department"
+                required
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -167,7 +169,7 @@ export default function Register() {
                 ))}
               </select>
               <p className="mt-1 text-xs text-gray-400">
-                If unsure, leave blank — the admin can assign it later.
+                Your department determines which HOD receives your submissions.
               </p>
             </div>
 
