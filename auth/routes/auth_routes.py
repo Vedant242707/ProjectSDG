@@ -37,6 +37,13 @@ from auth.dependencies.auth_deps import get_current_user
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
+def _is_college_email(email: str) -> bool:
+    """Require exactly the configured college domain for every sign-in path."""
+    normalized = email.strip().lower()
+    local_part, separator, domain = normalized.rpartition("@")
+    return bool(local_part and separator and domain == settings.COLLEGE_EMAIL_DOMAIN.lower())
+
+
 def _user_to_response(user: User) -> dict:
     """Convert a User document to a response dict, excluding hashed_password."""
     return {
@@ -53,8 +60,7 @@ def _user_to_response(user: User) -> dict:
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(body: RegisterRequest):
     # Validate email domain
-    domain = body.email.strip().split("@")[-1].lower()
-    if domain != settings.COLLEGE_EMAIL_DOMAIN:
+    if not _is_college_email(body.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Only @{settings.COLLEGE_EMAIL_DOMAIN} email addresses are allowed",
@@ -120,7 +126,7 @@ async def list_departments_public() -> List[dict]:
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # Find user by email (using username field from form)
     user = await User.find_one(User.email == form_data.username.strip().lower())
-    if not user:
+    if not user or not user.is_active or not _is_college_email(form_data.username):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -171,7 +177,7 @@ async def refresh(body: RefreshRequest):
 
     # Fetch the user
     user = await User.get(token_doc.user_id)
-    if not user:
+    if not user or not user.is_active or not _is_college_email(user.email):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
@@ -278,7 +284,7 @@ async def google_oauth_callback(code: str = None, error: str = None):
     email_verified: bool = id_info.get("email_verified", False)
 
     # Server-side @msrit.edu domain check
-    if not email_verified or not google_email.endswith(f"@{settings.COLLEGE_EMAIL_DOMAIN}"):
+    if not email_verified or not _is_college_email(google_email):
         redirect_url = (
             f"{frontend_login_url}?error="
             + quote(f"Only @{settings.COLLEGE_EMAIL_DOMAIN} accounts are allowed.")
@@ -287,6 +293,10 @@ async def google_oauth_callback(code: str = None, error: str = None):
 
     # Find existing user by email, or create a new one
     user = await User.find_one(User.email == google_email)
+
+    if user and not user.is_active:
+        redirect_url = f"{frontend_login_url}?error={quote('This account has been deactivated.')}"
+        return RedirectResponse(url=redirect_url)
 
     if not user:
         # Derive college_id from email prefix; handle potential uniqueness conflicts

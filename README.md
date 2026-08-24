@@ -558,6 +558,19 @@ as the HOD, then approve or reject as the committee account.
 | `ADMIN_EMAIL` | `admin@msrit.edu` | Seed admin email |
 | `ADMIN_PASSWORD` | — | Seed admin password |
 | `ADMIN_COLLEGE_ID` | `ADMIN001` | Seed admin college ID |
+| `GOOGLE_CLIENT_ID` | — | OAuth client ID from Google Cloud |
+| `GOOGLE_CLIENT_SECRET` | — | OAuth client secret from Google Cloud |
+| `GOOGLE_REDIRECT_URI` | `http://localhost/api/auth/google/callback` | Must exactly match the URI registered in Google Cloud |
+| `FRONTEND_URL` | `http://localhost` | Public URL of the React application |
+
+### Google sign-in setup
+
+The sign-in page includes **Sign in with Google**. Before using it locally, add
+`http://localhost/api/auth/google/callback` as an authorised redirect URI for
+the OAuth client in Google Cloud Console, then set `GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET` in `.env`. The server verifies the Google ID token and
+allows only verified `@msrit.edu` addresses. Password sign-in, registration,
+token refresh, and Google sign-in all enforce the same domain rule.
 
 ---
 

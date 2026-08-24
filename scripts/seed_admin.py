@@ -18,10 +18,24 @@ async def seed_admin():
     client = AsyncIOMotorClient(settings.MONGO_URI)
     await init_beanie(database=client[settings.DB_NAME], document_models=[User])
 
-    # Check if admin already exists
-    existing = await User.find_one(User.email == settings.ADMIN_EMAIL.lower())
+    # Match by email or college ID so changing the configured admin email does
+    # not leave an old account blocking the new domain-compliant account.
+    existing = await User.find_one(
+        {
+            "$or": [
+                {"email": settings.ADMIN_EMAIL.lower()},
+                {"college_id": settings.ADMIN_COLLEGE_ID},
+            ]
+        }
+    )
     if existing:
-        print("Admin already exists, skipping")
+        existing.email = settings.ADMIN_EMAIL.lower()
+        existing.college_id = settings.ADMIN_COLLEGE_ID
+        existing.hashed_password = pwd_context.hash(settings.ADMIN_PASSWORD)
+        existing.role = Role.ADMIN
+        existing.department_ids = []
+        await existing.save()
+        print("Admin account updated successfully")
         client.close()
         return
 
