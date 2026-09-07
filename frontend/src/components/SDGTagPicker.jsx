@@ -24,8 +24,8 @@ export default function SDGTagPicker({ selected = [], onChange }) {
             onClick={() => toggle(n)}
             className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
               active
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
+                ? 'bg-sky-500 text-slate-950 shadow-[0_0_10px_rgba(34,211,238,.35)]'
+                : 'bg-cyan-50 text-sky-700 hover:bg-cyan-100 dark:bg-slate-800 dark:text-cyan-300 dark:hover:bg-slate-700'
             }`}
           >
             SDG {n}: {label}

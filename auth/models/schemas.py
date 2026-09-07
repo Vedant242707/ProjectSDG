@@ -11,6 +11,20 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=6)
     confirm_password: str = Field(..., min_length=6)
     department_id: str = Field(..., min_length=1)  # user-selected at registration
+    verification_token: str = Field(..., min_length=20)
+
+
+class SendOtpRequest(BaseModel):
+    email: str = Field(..., min_length=1)
+
+
+class VerifyOtpRequest(BaseModel):
+    email: str = Field(..., min_length=1)
+    otp: str = Field(..., pattern=r"^\d{6}$")
+
+
+class VerifyOtpResponse(BaseModel):
+    verification_token: str
 
 
 class LoginRequest(BaseModel):

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { Eye, EyeOff } from 'lucide-react'
 
 const ROLE_HOME = {
   ADMIN: '/admin',
@@ -21,6 +22,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   // ── Handle Google OAuth redirect back to /login ──────────────────────────────
   useEffect(() => {
@@ -68,19 +70,18 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 px-4">
+    <div className="premium-page">
       <div className="w-full max-w-md">
         {/* Logo / wordmark */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white shadow-lg">
-            S
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">SDG Portal</h1>
-          <p className="mt-1 text-sm text-gray-500">Sustainable Development Goals Tracker</p>
+          <div className="brand-mark mx-auto mb-4">S</div>
+          <p className="eyebrow">MSRIT · SDG WORKFLOW</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Welcome back</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Sign in to continue your work.</p>
         </div>
 
-        <div className="rounded-2xl bg-white px-8 py-9 shadow-lg ring-1 ring-gray-900/5">
-          <h2 className="mb-6 text-xl font-semibold text-gray-800">Sign in to your account</h2>
+        <div className="premium-card">
+          <h2 className="mb-6 text-lg font-semibold text-slate-900 dark:text-white">Sign in to your account</h2>
 
           {error && (
             <div className="mb-5 flex items-start gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
@@ -102,7 +103,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@msrit.edu"
-                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="form-input"
               />
             </div>
 
@@ -112,21 +113,21 @@ export default function Login() {
                   Password
                 </label>
               </div>
-              <input
+              <div className="relative"><input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
+                className="form-input pr-11"
+              /><button type="button" onClick={() => setShowPassword(v => !v)} className="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="primary-button w-full"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

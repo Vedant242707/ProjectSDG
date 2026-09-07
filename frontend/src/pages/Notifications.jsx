@@ -33,33 +33,33 @@ function NotificationRow({ notif, onMarkRead }) {
   }
 
   return (
-    <li>
+    <li className="notification-enter">
       <button
         onClick={handleClick}
         className={`group w-full text-left transition-colors ${
           notif.read
-            ? 'hover:bg-gray-50'
-            : 'bg-blue-50 hover:bg-blue-100'
+            ? 'hover:bg-slate-50 dark:hover:bg-slate-800/70'
+            : 'bg-cyan-50/80 hover:bg-cyan-100/80 dark:bg-cyan-950/40 dark:hover:bg-cyan-900/50'
         }`}
       >
         <div className="flex items-start gap-3 px-4 py-4 sm:px-6">
           {/* Unread dot */}
           <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center">
             {!notif.read
-              ? <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+              ? <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,.85)]" />
               : <span className="h-2.5 w-2.5 rounded-full bg-transparent" />
             }
           </div>
 
           {/* Content */}
           <div className="min-w-0 flex-1">
-            <p className={`text-sm leading-snug ${notif.read ? 'text-gray-700' : 'font-medium text-gray-900'}`}>
+            <p className={`text-sm leading-snug ${notif.read ? 'text-slate-600 dark:text-slate-300' : 'font-medium text-slate-900 dark:text-white'}`}>
               {notif.message}
             </p>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-xs text-gray-400">{timeAgo(notif.created_at)}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">{timeAgo(notif.created_at)}</span>
               {notif.submission_id && (
-                <span className="text-xs text-blue-500 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="text-xs text-cyan-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-cyan-300">
                   View submission →
                 </span>
               )}
@@ -75,20 +75,20 @@ function NotificationRow({ notif, onMarkRead }) {
 
 function Pagination({ page, hasNext, onPrev, onNext }) {
   return (
-    <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
+    <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 dark:border-slate-700 sm:px-6">
       <button
         onClick={onPrev}
         disabled={page === 1}
-        className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <ChevronLeft className="h-4 w-4" />
         Previous
       </button>
-      <span className="text-sm text-gray-500">Page {page}</span>
+      <span className="text-sm text-slate-500 dark:text-slate-400">Page {page}</span>
       <button
         onClick={onNext}
         disabled={!hasNext}
-        className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
       >
         Next
         <ChevronRight className="h-4 w-4" />
@@ -163,9 +163,9 @@ export default function Notifications() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between page-enter">
         <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Notifications</h1>
           {unreadCount > 0 && (
             <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-bold text-white">
               {unreadCount}
@@ -177,7 +177,7 @@ export default function Notifications() {
           <button
             onClick={handleMarkAll}
             disabled={markingAll}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 disabled:opacity-50"
           >
             {markingAll
               ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
@@ -189,21 +189,21 @@ export default function Notifications() {
       </div>
 
       {/* Card */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 page-enter">
         {loading ? (
-          <div className="flex items-center gap-3 px-6 py-10 text-sm text-gray-500">
+          <div className="flex items-center gap-3 px-6 py-10 text-sm text-slate-500 dark:text-slate-400">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
             Loading notifications…
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <BellOff className="h-12 w-12 text-gray-300" />
-            <p className="text-base font-medium text-gray-500">No notifications yet</p>
-            <p className="text-sm text-gray-400">You&apos;ll be notified when your submissions are reviewed.</p>
+            <BellOff className="h-12 w-12 text-slate-300 dark:text-slate-600" />
+            <p className="text-base font-medium text-slate-500 dark:text-slate-300">No notifications yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">You&apos;ll be notified when your submissions are reviewed.</p>
           </div>
         ) : (
           <>
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
               {notifications.map((notif) => (
                 <NotificationRow
                   key={notif._id}

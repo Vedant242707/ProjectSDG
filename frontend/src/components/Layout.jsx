@@ -145,8 +145,8 @@ function NavLink({ item, collapsed, onClick }) {
       title={collapsed ? item.label : undefined}
       className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
         active
-          ? 'bg-blue-600 text-white'
-          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+          ? 'bg-slate-700 text-white shadow-sm'
+          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
       }`}
     >
       <Icon className={`h-5 w-5 shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
@@ -168,7 +168,7 @@ function Sidebar({ collapsed, mobileOpen, onMobileClose, user }) {
     <div className="flex h-full flex-col bg-slate-900">
       {/* Logo */}
       <div className={`flex h-16 shrink-0 items-center border-b border-slate-700 px-4 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-950">
           S
         </div>
         {!collapsed && (
@@ -255,7 +255,7 @@ export default function Layout() {
   const sidebarWidth = collapsed ? 'md:pl-16' : 'md:pl-60'
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar
         collapsed={collapsed}
         mobileOpen={mobileOpen}
@@ -266,7 +266,7 @@ export default function Layout() {
       {/* Everything to the right of the sidebar */}
       <div className={`flex min-h-screen flex-col transition-all duration-300 ${sidebarWidth}`}>
         {/* ── Top header ── */}
-        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur sm:px-6 dark:border-slate-800 dark:bg-slate-950/90">
           <div className="flex items-center gap-3">
             {/* Mobile hamburger */}
             <button
@@ -286,7 +286,7 @@ export default function Layout() {
               {collapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
             </button>
 
-            <h1 className="text-base font-semibold text-gray-800">
+            <h1 className="text-base font-semibold text-slate-800 dark:text-slate-100">
               {getPageTitle(pathname)}
             </h1>
           </div>
@@ -300,7 +300,7 @@ export default function Layout() {
             ) : (
               <Link
                 to="/login"
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-950"
               >
                 Sign in
               </Link>

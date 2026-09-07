@@ -522,9 +522,9 @@ Frontend dev server runs on `http://localhost:5173` with API proxy to `:8000`.
 
 ### Workflow test accounts
 
-Run `python scripts/seed_test_users.py` after the database is available. It
-creates (or resets) the following local test accounts and assigns the submitter
-and HOD to the same **Workflow Test Department**:
+The application automatically creates (or repairs) the following local test
+accounts every time Docker starts. The submitter and HOD are assigned to the
+same **Workflow Test Department**, so the workflow is ready immediately:
 
 | Role | Email | Password |
 |------|-------|----------|
@@ -562,6 +562,12 @@ as the HOD, then approve or reject as the committee account.
 | `GOOGLE_CLIENT_SECRET` | — | OAuth client secret from Google Cloud |
 | `GOOGLE_REDIRECT_URI` | `http://localhost/api/auth/google/callback` | Must exactly match the URI registered in Google Cloud |
 | `FRONTEND_URL` | `http://localhost` | Public URL of the React application |
+| `SMTP_HOST` | — | SMTP server used to deliver registration OTP emails |
+| `SMTP_PORT` | `587` | SMTP server port |
+| `SMTP_USERNAME` | — | SMTP account username |
+| `SMTP_PASSWORD` | — | SMTP app password or provider credential |
+| `SMTP_FROM_EMAIL` | — | Sender address shown to registrants |
+| `SMTP_USE_TLS` | `true` | Enable STARTTLS for SMTP |
 
 ### Google sign-in setup
 
@@ -576,6 +582,15 @@ To move the application to a different URL later, update `FRONTEND_URL` and
 `GOOGLE_REDIRECT_URI` in `.env`, then add the exact new callback URI to the
 same Google OAuth client's authorised redirect URIs. Keep `GOOGLE_CLIENT_ID`
 and `GOOGLE_CLIENT_SECRET` in `.env` only; never commit them.
+
+### Email OTP setup
+
+Password registration requires a six-digit email code that expires in ten
+minutes. Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
+`SMTP_FROM_EMAIL`, and `SMTP_USE_TLS` in the untracked `.env` file. For Gmail,
+use a dedicated sender account and a Google App Password; for the college
+deployment, replace those values with the college SMTP provider’s credentials.
+The code never needs to change when ownership changes.
 
 ---
 

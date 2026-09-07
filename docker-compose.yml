@@ -58,8 +58,8 @@ services:
   backend:
     build: .
     container_name: sdg_backend
-    # No --reload in production; workers=2 for async FastAPI is sufficient
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    # A single worker keeps local demo-account seeding deterministic at startup.
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1
     env_file:
       - .env
     environment:

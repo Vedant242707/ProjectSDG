@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './components/Toast'
+import ThemeToggle from './components/ThemeToggle'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -18,19 +20,23 @@ import SdgDetail from './pages/SdgDetail'
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
           <Routes>
             {/* ── Public — no layout ── */}
             <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/sdg/:number" element={<SdgDetail />} />
 
             {/* ── Authenticated app — inside Layout shell ── */}
             <Route element={<Layout />}>
+              <Route
+                path="/dashboard"
+                element={<ProtectedRoute><Dashboard embedded /></ProtectedRoute>}
+              />
               <Route
                 path="/submissions"
                 element={<ProtectedRoute><MySubmissions /></ProtectedRoute>}
@@ -72,8 +78,10 @@ export default function App() {
             {/* ── 404 ── */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </ToastProvider>
-    </AuthProvider>
+          <ThemeToggle />
+          </BrowserRouter>
+        </ToastProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

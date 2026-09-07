@@ -41,6 +41,15 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str = "http://localhost/api/auth/google/callback"
     FRONTEND_URL: str = "http://localhost"
 
+    # SMTP email verification. Use an app password/provider credential, never
+    # a personal account password. Set actual values only in .env.
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_USE_TLS: bool = True
+
     @property
     def allowed_origins_list(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]

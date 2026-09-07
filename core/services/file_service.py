@@ -12,14 +12,7 @@ from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
-_ALLOWED_CONTENT_TYPES = {
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-}
+_ALLOWED_CONTENT_TYPES = {"application/pdf", "image/jpeg"}
 _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 _MAX_FILES_PER_SUBMISSION = 5
 
@@ -64,12 +57,12 @@ async def upload_file(
         )
 
     ext = (file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "").strip()
-    allowed_extensions = {"pdf", "jpg", "jpeg", "png", "gif", "doc", "docx"}
+    allowed_extensions = {"pdf", "jpg", "jpeg"}
     
     if file.content_type not in _ALLOWED_CONTENT_TYPES and ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type '{file.content_type}' or extension '.{ext}' is not allowed. Only PDF, JPEG, PNG, GIF, and Word files are permitted.",
+            detail="Only PDF and JPG/JPEG files are permitted.",
         )
 
     submission = await Submission.get(PydanticObjectId(submission_id))
@@ -128,6 +121,15 @@ async def get_download_url(object_name: str) -> str:
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"File not found: {exc}",
         )
+
+
+def get_file_object(object_name: str):
+    """Return an object stream that the backend can safely proxy to the browser."""
+    client = get_minio_client()
+    try:
+        return client.get_object(settings.MINIO_BUCKET, object_name)
+    except S3Error as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File not found: {exc}")
 
 
 async def delete_file(object_name: str) -> None:

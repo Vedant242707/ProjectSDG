@@ -29,7 +29,8 @@ client.interceptors.response.use(
     // makes the credentials the user just entered appear to have vanished.
     const isAuthFormRequest = original?.url === '/auth/login' || original?.url === '/auth/register'
 
-    if (err.response?.status === 401 && !original._retry && !isAuthFormRequest) {
+    const isRefreshRequest = original?.url === '/auth/refresh'
+    if (err.response?.status === 401 && !original._retry && !isAuthFormRequest && !isRefreshRequest) {
       original._retry = true
 
       const refreshToken = localStorage.getItem(KEYS.REFRESH)
@@ -49,11 +50,18 @@ client.interceptors.response.use(
 
         original.headers.Authorization = `Bearer ${data.access_token}`
         return client(original)
-      } catch {
-        clearSession()
+      } catch (refreshErr) {
+        // A transient failure from an optional background request must not
+        // forcibly log a user out. A later protected action can refresh again.
+        // Only a refresh endpoint response that explicitly rejects the token
+        // clears the session. Network/service failures leave the local session
+        // intact so the next request can recover normally.
+        if (refreshErr.response?.status === 401) clearSession()
         return Promise.reject(err)
       }
     }
+
+    if (err.response?.status === 401 && isRefreshRequest) clearSession()
 
     return Promise.reject(err)
   }

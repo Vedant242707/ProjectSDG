@@ -106,13 +106,14 @@ export function AuthProvider({ children }) {
     return userData
   }
 
-  const register = async (college_id, email, password, confirm_password, department_id) => {
+  const register = async (college_id, email, password, confirm_password, department_id, verification_token) => {
     const { data } = await client.post('/auth/register', {
       college_id,
       email,
       password,
       confirm_password,
       ...(department_id ? { department_id } : {}),
+      verification_token,
     })
     return data
   }

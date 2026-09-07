@@ -22,6 +22,9 @@ from auth.models.schemas import (
     TokenResponse,
     UserResponse,
     MessageResponse,
+    SendOtpRequest,
+    VerifyOtpRequest,
+    VerifyOtpResponse,
 )
 from auth.services.auth_service import (
     hash_password,
@@ -33,6 +36,11 @@ from auth.services.auth_service import (
     rotate_refresh_token,
 )
 from auth.dependencies.auth_deps import get_current_user
+from auth.services.email_verification_service import (
+    consume_registration_token,
+    create_and_send_otp,
+    verify_otp,
+)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -57,6 +65,31 @@ def _user_to_response(user: User) -> dict:
     }
 
 
+@router.post("/registration/send-otp", response_model=MessageResponse)
+async def send_registration_otp(body: SendOtpRequest):
+    email = body.email.strip().lower()
+    if not _is_college_email(email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Only @{settings.COLLEGE_EMAIL_DOMAIN} email addresses are allowed")
+    if await User.find_one(User.email == email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered")
+    try:
+        await create_and_send_otp(email)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unable to send the verification email. Please try again later.")
+    return MessageResponse(message="Verification code sent. It expires in 10 minutes.")
+
+
+@router.post("/registration/verify-otp", response_model=VerifyOtpResponse)
+async def verify_registration_otp(body: VerifyOtpRequest):
+    email = body.email.strip().lower()
+    token = await verify_otp(email, body.otp)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid, expired, or exhausted verification code")
+    return VerifyOtpResponse(verification_token=token)
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(body: RegisterRequest):
     # Validate email domain
@@ -73,6 +106,10 @@ async def register(body: RegisterRequest):
             detail="Passwords do not match",
         )
 
+    email = body.email.strip().lower()
+    if not await consume_registration_token(email, body.verification_token):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verify your email before creating an account")
+
     # Check unique college_id
     existing_cid = await User.find_one(User.college_id == body.college_id)
     if existing_cid:
@@ -82,7 +119,7 @@ async def register(body: RegisterRequest):
         )
 
     # Check unique email
-    existing_email = await User.find_one(User.email == body.email.strip().lower())
+    existing_email = await User.find_one(User.email == email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -103,7 +140,7 @@ async def register(body: RegisterRequest):
     # Create user with their selected department.
     user = User(
         college_id=body.college_id,
-        email=body.email.strip().lower(),
+        email=email,
         hashed_password=hash_password(body.password),
         role=Role.SUBMITTER,
         department_ids=[dept_oid],

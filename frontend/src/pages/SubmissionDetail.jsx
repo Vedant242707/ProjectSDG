@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   CheckCircle2, XCircle, ArrowRight, RotateCcw, Clock,
-  Upload, Trash2, Download, Wifi, WifiOff, FileText, AlertCircle,
+  Upload, Trash2, Download, Wifi, WifiOff, FileText, AlertCircle, X,
 } from 'lucide-react'
 import client, { KEYS } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -30,11 +30,7 @@ const STATUS_LABEL = {
   WITHDRAWN:           'Withdrawn',
 }
 
-const SDG_COLORS = [
-  '#E5243B','#DDA63A','#4C9F38','#C5192D','#FF3A21','#26BDE2','#FCC30B',
-  '#A21942','#FD6925','#DD1367','#FD9D24','#BF8B2E','#3F7E44','#0A97D9',
-  '#56C02B','#00689D','#19486A',
-]
+const SDG_COLORS = Array(17).fill('#0ea5e9')
 
 // Computed future steps to show dimmed at the bottom of the timeline
 const FUTURE_STEPS = {
@@ -126,14 +122,15 @@ function MetaItem({ label, children }) {
 
 // ─── Attachments ──────────────────────────────────────────────────────────────
 
-function AttachmentRow({ att, index, canDelete, onDelete }) {
+function AttachmentRow({ att, index, canDelete, onDelete, onPreview }) {
   const [downloading, setDownloading] = useState(false)
 
   const download = async () => {
     setDownloading(true)
     try {
-      const { data } = await client.get(`/files/${att.object_name}`)
-      window.open(data.download_url, '_blank', 'noopener,noreferrer')
+      const { data } = await client.get(`/files/${att.object_name}`, { responseType: 'blob' })
+      const fileUrl = URL.createObjectURL(data)
+      onPreview({ url: fileUrl, name: att.original_filename, contentType: att.content_type })
     } catch {
       /* ignore — server may be unavailable */
     } finally {
@@ -154,10 +151,10 @@ function AttachmentRow({ att, index, canDelete, onDelete }) {
         <button
           onClick={download}
           disabled={downloading}
-          className="flex items-center gap-1 rounded-md text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50"
+          className={`flex items-center gap-1 rounded-md text-xs font-medium text-blue-600 transition hover:scale-105 hover:text-blue-800 disabled:opacity-50 ${downloading ? 'attachment-opening' : ''}`}
         >
           <Download className="h-3.5 w-3.5" />
-          {downloading ? 'Getting link…' : 'Download'}
+          {downloading ? 'Opening…' : 'View / download'}
         </button>
         {canDelete && (
           <button
@@ -173,8 +170,38 @@ function AttachmentRow({ att, index, canDelete, onDelete }) {
   )
 }
 
+function AttachmentPreview({ preview, onClose }) {
+  if (!preview) return null
+  const isImage = preview.contentType === 'image/jpeg'
+  return (
+    <div className="attachment-preview-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" onClick={onClose}>
+      <section className="attachment-preview-window flex h-[min(82vh,760px)] w-full max-w-5xl flex-col overflow-hidden bg-white shadow-2xl dark:bg-slate-950" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label={`Preview ${preview.name}`}>
+        <header className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+          <div className="flex min-w-0 items-center gap-2"><FileText className="h-4 w-4 shrink-0 text-cyan-500" /><p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{preview.name}</p></div>
+          <button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white" aria-label="Close attachment preview"><X className="h-5 w-5" /></button>
+        </header>
+        <div className="min-h-0 flex-1 bg-slate-100 p-3 dark:bg-slate-900">
+          {isImage ? <img src={preview.url} alt={preview.name} className="h-full w-full object-contain" /> : <iframe title={preview.name} src={preview.url} className="h-full w-full rounded-lg bg-white" />}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function AttachmentsCard({ attachments, canUpload, onUpload, onDelete }) {
   const fileRef = useRef()
+  const [preview, setPreview] = useState(null)
+
+  const closePreview = () => {
+    if (preview?.url) URL.revokeObjectURL(preview.url)
+    setPreview(null)
+  }
+  const openPreview = (nextPreview) => {
+    setPreview((current) => {
+      if (current?.url) URL.revokeObjectURL(current.url)
+      return nextPreview
+    })
+  }
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -189,7 +216,7 @@ function AttachmentsCard({ attachments, canUpload, onUpload, onDelete }) {
               <Upload className="h-3.5 w-3.5" />
               Upload file
             </button>
-            <input ref={fileRef} type="file" className="hidden" onChange={onUpload} />
+            <input ref={fileRef} type="file" accept="application/pdf,image/jpeg,.pdf,.jpg,.jpeg" className="hidden" onChange={onUpload} />
           </>
         )}
       </div>
@@ -202,12 +229,14 @@ function AttachmentsCard({ attachments, canUpload, onUpload, onDelete }) {
               index={i}
               canDelete={canUpload}
               onDelete={onDelete}
+              onPreview={openPreview}
             />
           ))}
         </ul>
       ) : (
         <p className="text-sm text-gray-400">No attachments yet.</p>
       )}
+      <AttachmentPreview preview={preview} onClose={closePreview} />
     </div>
   )
 }

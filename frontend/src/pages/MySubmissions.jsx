@@ -65,7 +65,7 @@ export default function MySubmissions() {
               </div>
               <div className="mt-2 flex flex-wrap gap-1">
                 {s.sdg_tags?.map((n) => (
-                  <span key={n} className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">SDG {n}</span>
+                  <span key={n} className="rounded-full bg-cyan-50 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-cyan-950/50 dark:text-cyan-300">SDG {n}</span>
                 ))}
               </div>
             </Link>

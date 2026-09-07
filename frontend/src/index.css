@@ -1,1 +1,80 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+/* Existing screens use Tailwind's neutral utilities extensively. These base
+   overrides give every page a coherent dark surface while page-specific
+   dark: utilities can continue to refine individual components. */
+html.dark .bg-white { background-color: #1f2937 !important; }
+html.dark .bg-gray-50 { background-color: #111827 !important; }
+html.dark .bg-gray-100 { background-color: #374151 !important; }
+html.dark .bg-gray-200 { background-color: #4b5563 !important; }
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300 { border-color: #4b5563 !important; }
+html.dark .text-gray-900,
+html.dark .text-gray-800 { color: #f9fafb !important; }
+html.dark .text-gray-700,
+html.dark .text-gray-600 { color: #d1d5db !important; }
+html.dark .text-gray-500,
+html.dark .text-gray-400 { color: #9ca3af !important; }
+html.dark input,
+html.dark select,
+html.dark textarea { background-color: #111827; color: #f9fafb; }
+
+body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
+
+.premium-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  background: radial-gradient(circle at top, #f8fafc 0%, #e2e8f0 100%);
+}
+.dark .premium-page { background: radial-gradient(circle at top, #1e293b 0%, #020617 100%); }
+.premium-card { width: 100%; border: 1px solid rgb(226 232 240); border-radius: 1.25rem; padding: 2rem; background: rgb(255 255 255 / .88); box-shadow: 0 24px 64px rgb(15 23 42 / .12); backdrop-filter: blur(12px); }
+.dark .premium-card { border-color: rgb(71 85 105); background: rgb(15 23 42 / .86); box-shadow: 0 24px 64px rgb(0 0 0 / .32); }
+.brand-mark { display: flex; height: 3.25rem; width: 3.25rem; align-items: center; justify-content: center; border-radius: 1rem; background: #0f172a; color: white; font-size: 1.25rem; font-weight: 700; box-shadow: 0 8px 20px rgb(15 23 42 / .24); }
+.dark .brand-mark { background: #e2e8f0; color: #0f172a; }
+.eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .14em; color: #64748b; }
+.form-label { display: block; margin-bottom: .45rem; font-size: .8rem; font-weight: 600; color: #334155; }
+.dark .form-label { color: #cbd5e1; }
+.form-input { width: 100%; border: 1px solid #cbd5e1; border-radius: .7rem; background: white; padding: .68rem .82rem; font-size: .875rem; color: #0f172a; outline: none; transition: border-color .15s, box-shadow .15s; }
+.form-input:focus { border-color: #475569; box-shadow: 0 0 0 3px rgb(71 85 105 / .14); }
+.dark .form-input { border-color: #475569; background: #0f172a; color: #f8fafc; }
+.primary-button, .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border-radius: .7rem; padding: .7rem 1rem; font-size: .875rem; font-weight: 600; transition: background .15s, transform .15s; }
+.primary-button { background: #0f172a; color: white; } .primary-button:hover { background: #334155; } .primary-button:disabled, .secondary-button:disabled { cursor: not-allowed; opacity: .55; }
+.secondary-button { border: 1px solid #cbd5e1; background: white; color: #334155; } .secondary-button:hover { background: #f1f5f9; }
+.dark .primary-button { background: #e2e8f0; color: #0f172a; } .dark .primary-button:hover { background: white; }
+.dark .secondary-button { border-color: #475569; background: #1e293b; color: #e2e8f0; } .dark .secondary-button:hover { background: #334155; }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes soft-pulse { 50% { box-shadow: 0 0 0 5px rgb(34 211 238 / .12); } }
+@keyframes card-flip-open { 0% { transform: perspective(900px) rotateY(0deg) scale(1); opacity: 1; } 60% { transform: perspective(900px) rotateY(-14deg) scale(1.04); } 100% { transform: perspective(900px) rotateY(-90deg) scale(.94); opacity: .2; } }
+@keyframes page-flip-in { 0% { opacity: 0; transform: perspective(1100px) rotateY(10deg) translateX(24px); transform-origin: left center; } 100% { opacity: 1; transform: perspective(1100px) rotateY(0) translateX(0); } }
+@keyframes preview-backdrop { from { opacity: 0; } to { opacity: 1; } }
+@keyframes preview-expand { from { opacity: 0; transform: translateY(28px) scale(.84); border-radius: 1.75rem; } to { opacity: 1; transform: translateY(0) scale(1); border-radius: 1rem; } }
+.page-enter { animation: rise-in .32s ease-out both; }
+.goal-card { transform-style: preserve-3d; will-change: transform, opacity; }.goal-card-opening { animation: card-flip-open .36s cubic-bezier(.4,0,.2,1) forwards; pointer-events: none; }
+.page-flip-enter { animation: page-flip-in .44s cubic-bezier(.22,.8,.26,1) both; transform-origin: left center; }
+.notification-enter { animation: rise-in .28s ease-out both; }
+.notification-enter:nth-child(2) { animation-delay: .03s; }.notification-enter:nth-child(3) { animation-delay: .06s; }.notification-enter:nth-child(4) { animation-delay: .09s; }.notification-enter:nth-child(5) { animation-delay: .12s; }
+.approved-project-row { transition: background-color .18s ease, transform .18s ease; }.approved-project-row:hover { transform: translateX(3px); }
+.attachment-opening { animation: soft-pulse .8s ease-in-out infinite; }
+.attachment-preview-backdrop { animation: preview-backdrop .22s ease-out both; }.attachment-preview-window { animation: preview-expand .32s cubic-bezier(.22,.8,.26,1) both; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }

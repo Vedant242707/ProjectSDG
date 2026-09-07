@@ -29,12 +29,12 @@ export default function NotificationBell() {
   return (
     <Link
       to="/notifications"
-      className="relative flex items-center rounded-md p-1.5 text-gray-500 hover:bg-gray-100"
+      className="relative flex items-center rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
       aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
     >
       <Bell className="h-5 w-5" />
       {unread > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-500 px-0.5 text-[10px] font-bold leading-none text-white">
+        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-cyan-500 px-0.5 text-[10px] font-bold leading-none text-slate-950 shadow-[0_0_10px_rgba(34,211,238,.8)]">
           {unread > 99 ? '99+' : unread}
         </span>
       )}

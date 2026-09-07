@@ -4,12 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 
 // ─── SDG metadata ──────────────────────────────────────────────────────────────
 
-const SDG_COLORS = [
-  '#E5243B', '#DDA63A', '#4C9F38', '#C5192D', '#FF3A21',
-  '#26BDE2', '#FCC30B', '#A21942', '#FD6925', '#DD1367',
-  '#FD9D24', '#BF8B2E', '#3F7E44', '#0A97D9', '#56C02B',
-  '#00689D', '#19486A',
-]
+const SDG_COLORS = Array(17).fill('#0ea5e9')
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -82,7 +77,7 @@ export default function SdgDetail() {
         )}
 
         {data && !loading && (
-          <div className="space-y-6">
+          <div className="space-y-6 page-flip-enter">
             {/* SDG title card */}
             <div
               className="rounded-xl p-6"
@@ -144,7 +139,7 @@ export default function SdgDetail() {
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {data.submissions.map((sub, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/60">
+                      <tr key={idx} className="approved-project-row hover:bg-gray-50/60">
                           <td className="px-5 py-3 text-sm font-medium text-gray-800">{sub.title}</td>
                           <td className="px-5 py-3 text-sm text-gray-600">
                             {sub.department_name}

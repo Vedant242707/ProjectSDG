@@ -2,11 +2,14 @@ from datetime import datetime, timezone
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import StreamingResponse
+from starlette.background import BackgroundTask
 
 from auth.dependencies.auth_deps import get_current_user
 from models.submission import Submission, SubmissionStatus
 from models.user import User
 from core.services import file_service
+from core.services import submission_service
 
 router = APIRouter(tags=["Files"])
 
@@ -56,9 +59,22 @@ async def get_download_url(
     object_name: str,
     user: User = Depends(get_current_user),
 ):
-    """Return a pre-signed MinIO download URL (valid 1 hour). Client downloads directly from MinIO."""
-    url = await file_service.get_download_url(object_name)
-    return {"download_url": url, "expires_in": "1 hour"}
+    """Safely proxy an attachment so internal Docker storage is never exposed to browsers."""
+    submission = await Submission.find_one({"attachments.object_name": object_name})
+    if submission is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    await submission_service.get_submission(str(submission.id), user)
+
+    attachment = next(att for att in submission.attachments if att.get("object_name") == object_name)
+    stream = file_service.get_file_object(object_name)
+    filename = attachment.get("original_filename", "attachment")
+    media_type = attachment.get("content_type") or "application/octet-stream"
+    return StreamingResponse(
+        stream.stream(32 * 1024),
+        media_type=media_type,
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+        background=BackgroundTask(stream.close),
+    )
 
 
 @router.delete(
