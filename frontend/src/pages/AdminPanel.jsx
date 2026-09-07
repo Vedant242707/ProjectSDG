@@ -285,15 +285,15 @@ function DeptFormModal({ dept, onSave, onClose }) {
 
 function Tabs({ active, onChange }) {
   return (
-    <div className="flex border-b border-gray-200">
+    <div className="flex border-b border-gray-200 dark:border-slate-700">
       {[['dashboard', 'Dashboard'], ['users', 'User Management'], ['depts', 'Departments']].map(([key, label]) => (
         <button
           key={key}
           onClick={() => onChange(key)}
           className={`px-5 py-3 text-sm font-medium transition-colors ${
             active === key
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-sky-500 bg-sky-50/70 text-sky-700 dark:border-cyan-500 dark:bg-slate-800 dark:text-cyan-200'
+              : 'text-gray-500 hover:bg-slate-50 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200'
           }`}
         >
           {label}
@@ -368,7 +368,7 @@ function DashboardTab() {
               {sdg_breakdown.map(sdg => {
                 const color = SDG_COLORS[sdg.sdg_number - 1]
                 return (
-                  <tr key={sdg.sdg_number} className="hover:bg-gray-50">
+                  <tr key={sdg.sdg_number} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                     <Td>
                       <span
                         className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold text-white"
@@ -408,7 +408,7 @@ function DashboardTab() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {department_breakdown.map(dept => (
-                  <tr key={dept.department_code} className="hover:bg-gray-50">
+                  <tr key={dept.department_code} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                     <Td className="font-medium">{dept.department_name}</Td>
                     <Td><span className="font-mono text-xs font-semibold tracking-wide text-gray-600">{dept.department_code}</span></Td>
                     <Td><span className="font-bold text-gray-800">{dept.count}</span></Td>
@@ -520,7 +520,7 @@ function UsersTab({ departments }) {
               </tr>
             )}
             {users.map((u) => (
-              <tr key={u._id} className="hover:bg-gray-50">
+              <tr key={u._id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                 <Td><span className="font-mono text-xs">{u.college_id}</span></Td>
                 <Td>{u.email}</Td>
                 <Td><RoleBadge role={u.role} /></Td>
@@ -654,7 +654,7 @@ function DeptsTab({ users }) {
               </tr>
             )}
             {depts.map((d) => (
-              <tr key={d._id} className="hover:bg-gray-50">
+              <tr key={d._id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                 <Td className="font-medium">{d.name}</Td>
                 <Td><span className="font-mono text-xs font-semibold tracking-wide text-gray-600">{d.code}</span></Td>
                 <Td className="text-sm">{hodLabel(d.hod_user_id)}</Td>

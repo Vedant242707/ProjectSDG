@@ -139,7 +139,7 @@ export default function SdgDetail() {
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {data.submissions.map((sub, idx) => (
-                      <tr key={idx} className="approved-project-row hover:bg-gray-50/60">
+                      <tr key={idx} className="approved-project-row hover:bg-gray-50/60 dark:hover:bg-slate-800">
                           <td className="px-5 py-3 text-sm font-medium text-gray-800">{sub.title}</td>
                           <td className="px-5 py-3 text-sm text-gray-600">
                             {sub.department_name}

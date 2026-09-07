@@ -34,6 +34,7 @@ html.dark .text-gray-400 { color: #9ca3af !important; }
 html.dark input,
 html.dark select,
 html.dark textarea { background-color: #111827; color: #f9fafb; }
+html.dark ::selection { background: rgb(8 47 73); color: rgb(236 254 255); }
 
 body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
 
