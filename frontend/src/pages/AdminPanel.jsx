@@ -305,7 +305,7 @@ function Tabs({ active, onChange }) {
 
 // ─── Dashboard tab ────────────────────────────────────────────────────────────
 
-const SDG_COLORS = Array(17).fill('#0ea5e9')
+const SDG_COLORS = Array(17).fill('#B85C4A')
 
 function DashboardTab() {
   const [summary, setSummary] = useState(null)
@@ -343,7 +343,7 @@ function DashboardTab() {
           { label: 'Approved', value: totals.total_approved ?? 0 },
           { label: 'In Review', value: totals.total_in_review ?? 0 },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-cyan-100 bg-cyan-50/60 px-5 py-4 text-center shadow-[0_8px_20px_rgba(14,165,233,0.12)] dark:border-cyan-900/60 dark:bg-cyan-950/20">
+          <div key={label} className="rounded-xl border border-cyan-100 bg-cyan-50/60 px-5 py-4 text-center shadow-[0_8px_20px_rgba(184,92,74,0.12)] dark:border-cyan-900/60 dark:bg-cyan-950/20">
             <div className="text-2xl font-extrabold text-sky-600 dark:text-cyan-300">{value}</div>
             <div className="mt-0.5 text-xs text-gray-500">{label}</div>
           </div>

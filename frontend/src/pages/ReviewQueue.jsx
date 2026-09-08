@@ -160,10 +160,10 @@ function Modal({ children, onClose }) {
 
 // ─── SDG tag chips ────────────────────────────────────────────────────────────
 
-const SDG_COLORS = Array(17).fill('#0ea5e9')
+const SDG_COLORS = Array(17).fill('#B85C4A')
 
 function SdgChip({ n }) {
-  const color = SDG_COLORS[n - 1] ?? '#6B7280'
+  const color = SDG_COLORS[n - 1] ?? '#6D324F'
   return (
     <span
       className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-white"

@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 
 // ─── SDG metadata ──────────────────────────────────────────────────────────────
 
-const SDG_COLORS = Array(17).fill('#0ea5e9')
+const SDG_COLORS = Array(17).fill('#B85C4A')
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -18,7 +18,7 @@ export default function SdgDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const color = SDG_COLORS[sdgNumber - 1] ?? '#26BDE2'
+  const color = SDG_COLORS[sdgNumber - 1] ?? '#B85C4A'
 
   useEffect(() => {
     if (!sdgNumber || sdgNumber < 1 || sdgNumber > 17) {

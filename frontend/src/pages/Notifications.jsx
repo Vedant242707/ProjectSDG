@@ -46,7 +46,7 @@ function NotificationRow({ notif, onMarkRead }) {
           {/* Unread dot */}
           <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center">
             {!notif.read
-              ? <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,.85)]" />
+              ? <span className="h-2.5 w-2.5 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(232,159,110,.85)]" />
               : <span className="h-2.5 w-2.5 rounded-full bg-transparent" />
             }
           </div>

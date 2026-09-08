@@ -30,7 +30,7 @@ const STATUS_LABEL = {
   WITHDRAWN:           'Withdrawn',
 }
 
-const SDG_COLORS = Array(17).fill('#0ea5e9')
+const SDG_COLORS = Array(17).fill('#B85C4A')
 
 // Computed future steps to show dimmed at the bottom of the timeline
 const FUTURE_STEPS = {
@@ -100,7 +100,7 @@ function StatusBadge({ status }) {
 }
 
 function SdgChip({ n }) {
-  const color = SDG_COLORS[n - 1] ?? '#6B7280'
+  const color = SDG_COLORS[n - 1] ?? '#6D324F'
   return (
     <span
       className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"

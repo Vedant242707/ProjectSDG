@@ -4,7 +4,7 @@ import { LogIn } from 'lucide-react'
 
 // ─── SDG metadata ──────────────────────────────────────────────────────────────
 
-const SDG_COLORS = Array(17).fill('#0ea5e9')
+const SDG_COLORS = Array(17).fill('#B85C4A')
 
 // ─── SDG Card — just name + total count ───────────────────────────────────────
 
@@ -25,7 +25,7 @@ function SdgCard({ sdg }) {
     <Link
       to={`/sdg/${sdg.sdg_number}`}
       onClick={openDetail}
-      className={`goal-card group relative flex flex-col overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-[0_8px_24px_rgba(14,165,233,0.16)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(14,165,233,0.28)] dark:border-cyan-900/60 dark:bg-slate-900 ${opening ? 'goal-card-opening' : ''}`}
+      className={`goal-card group relative flex flex-col overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-[0_8px_24px_rgba(184,92,74,0.16)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(184,92,74,0.28)] dark:border-cyan-900/60 dark:bg-slate-900 ${opening ? 'goal-card-opening' : ''}`}
     >
       <div className="px-4 pt-4 pb-3" style={{ background: `linear-gradient(135deg, ${color}24, ${color}08)` }}>
         <span
