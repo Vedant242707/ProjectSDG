@@ -32,6 +32,23 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const loadAccountDetails = useCallback(async (baseUser) => {
+    try {
+      const { data } = await client.get('/auth/me')
+      const userData = {
+        ...baseUser,
+        email: data.email || baseUser.email,
+        college_id: data.college_id || '',
+        department: data.department ?? null,
+      }
+      localStorage.setItem(KEYS.USER, JSON.stringify(userData))
+      setUser(userData)
+      return userData
+    } catch {
+      return baseUser
+    }
+  }, [])
+
   const tryRefresh = useCallback(async () => {
     const refreshToken = localStorage.getItem(KEYS.REFRESH)
     if (!refreshToken) return false
@@ -75,13 +92,14 @@ export function AuthProvider({ children }) {
       if (userData) {
         localStorage.setItem(KEYS.USER, JSON.stringify(userData))
         setUser(userData)
+        loadAccountDetails(userData)
       }
 
       setLoading(false)
     }
 
     init()
-  }, [tryRefresh])
+  }, [tryRefresh, loadAccountDetails])
 
   // Returns the user object so callers can act on role immediately.
   const login = async (email, password) => {
@@ -102,6 +120,7 @@ export function AuthProvider({ children }) {
     if (userData) {
       localStorage.setItem(KEYS.USER, JSON.stringify(userData))
       setUser(userData)
+      loadAccountDetails(userData)
     }
     return userData
   }
@@ -136,6 +155,7 @@ export function AuthProvider({ children }) {
     if (userData) {
       localStorage.setItem(KEYS.USER, JSON.stringify(userData))
       setUser(userData)
+      loadAccountDetails(userData)
     }
     return userData
   }

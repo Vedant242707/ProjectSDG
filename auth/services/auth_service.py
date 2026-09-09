@@ -34,6 +34,7 @@ def create_access_token(user: User) -> str:
     Build JWT with the exact shared contract shape:
     {
         "user_id": "<ObjectId as string>",
+        "email": "user@msrit.edu",
         "role": "HOD",
         "department_ids": ["<dept_id_1>", "<dept_id_2>"],
         "exp": 1234567890
@@ -44,6 +45,7 @@ def create_access_token(user: User) -> str:
     )
     payload = {
         "user_id": str(user.id),
+        "email": user.email,
         "role": user.role.value,
         "department_ids": [str(d) for d in user.department_ids],
         "exp": expire,

@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
+from jose import JWTError, jwt
 
 from config.settings import settings
 from models.department import Department
@@ -242,10 +243,28 @@ async def logout(body: LogoutRequest, user: User = Depends(get_current_user)):
     return MessageResponse(message="Logged out successfully")
 
 
+@router.get("/me")
+async def current_account(user: User = Depends(get_current_user)):
+    """Return the signed-in account with its displayable department, if applicable."""
+    response = _user_to_response(user)
+    response["department"] = None
+
+    if user.role in {Role.SUBMITTER, Role.HOD} and user.department_ids:
+        department = await Department.get(user.department_ids[0])
+        if department:
+            response["department"] = {
+                "id": str(department.id),
+                "name": department.name,
+                "code": department.code,
+            }
+
+    return response
+
+
 # ─── Google OAuth ──────────────────────────────────────────────────────────────
 
 @router.get("/google")
-async def google_oauth_start():
+async def google_oauth_start(department_id: str):
     """
     Redirect the browser to Google's OAuth 2.0 consent screen.
     No auth required — this is the entry point for Google login.
@@ -256,6 +275,24 @@ async def google_oauth_start():
             detail="Google OAuth is not configured on this server.",
         )
 
+    try:
+        department_oid = PydanticObjectId(department_id)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Select a valid department before continuing with Google")
+
+    if not await Department.get(department_oid):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected department does not exist")
+
+    state = jwt.encode(
+        {
+            "department_id": str(department_oid),
+            "purpose": "google_oauth",
+            "exp": datetime.now(timezone.utc).timestamp() + 600,
+        },
+        settings.JWT_SECRET,
+        algorithm=settings.JWT_ALGORITHM,
+    )
+
     params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
@@ -263,13 +300,14 @@ async def google_oauth_start():
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "select_account",
+        "state": state,
     }
     google_auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" + urlencode(params)
     return RedirectResponse(url=google_auth_url)
 
 
 @router.get("/google/callback")
-async def google_oauth_callback(code: str = None, error: str = None):
+async def google_oauth_callback(code: str = None, state: str = None, error: str = None):
     """
     Google redirects here after the user grants (or denies) access.
     - Validates the @msrit.edu domain server-side.
@@ -282,6 +320,20 @@ async def google_oauth_callback(code: str = None, error: str = None):
     # User denied access or Google returned an error
     if error or not code:
         redirect_url = f"{frontend_login_url}?error={quote(error or 'google_denied')}"
+        return RedirectResponse(url=redirect_url)
+
+    try:
+        state_payload = jwt.decode(state, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+        if state_payload.get("purpose") != "google_oauth":
+            raise JWTError("Unexpected OAuth state")
+        department_oid = PydanticObjectId(state_payload["department_id"])
+    except (JWTError, KeyError, TypeError, ValueError):
+        redirect_url = f"{frontend_login_url}?error={quote('Your Google sign-in request expired. Please choose a department and try again.')}"
+        return RedirectResponse(url=redirect_url)
+
+    department = await Department.get(department_oid)
+    if not department:
+        redirect_url = f"{frontend_login_url}?error={quote('The selected department no longer exists. Please try again.')}"
         return RedirectResponse(url=redirect_url)
 
     # Exchange authorization code for tokens
@@ -352,9 +404,15 @@ async def google_oauth_callback(code: str = None, error: str = None):
             # Empty string — not a valid bcrypt hash, so password login is blocked for OAuth users
             hashed_password="",
             role=Role.SUBMITTER,
-            department_ids=[],
+            department_ids=[department_oid],
         )
         await user.insert()
+
+    # Older Google-created Submitter accounts may not have had a department.
+    # Complete that missing setup without overwriting an existing assignment.
+    elif user.role == Role.SUBMITTER and not user.department_ids:
+        user.department_ids = [department_oid]
+        await user.save()
 
     # Issue internal JWT (same structure as /auth/login)
     access_token = create_access_token(user)

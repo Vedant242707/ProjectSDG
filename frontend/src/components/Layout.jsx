@@ -32,6 +32,11 @@ function RoleBadge({ role }) {
   )
 }
 
+function departmentLabel(user) {
+  if (!['SUBMITTER', 'HOD'].includes(user?.role) || !user.department) return null
+  return user.department.code ? `${user.department.name} (${user.department.code})` : user.department.name
+}
+
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
 const NAV = [
@@ -89,6 +94,7 @@ function getPageTitle(pathname) {
 function UserDropdown({ user, onLogout }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const department = departmentLabel(user)
 
   useEffect(() => {
     function handler(e) {
@@ -118,6 +124,7 @@ function UserDropdown({ user, onLogout }) {
             <div className="mt-2">
               <RoleBadge role={user.role} />
             </div>
+            {department && <p className="mt-2 truncate text-xs text-gray-500">{department}</p>}
           </div>
           <button
             onClick={() => { setOpen(false); onLogout() }}
@@ -164,6 +171,7 @@ function Sidebar({ collapsed, mobileOpen, onMobileClose, user }) {
   const visibleItems = NAV.filter(
     (item) => item.roles === null || (user && item.roles.includes(user.role))
   )
+  const department = departmentLabel(user)
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-slate-900">
@@ -199,6 +207,7 @@ function Sidebar({ collapsed, mobileOpen, onMobileClose, user }) {
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-slate-200">{user.email}</p>
               <p className="truncate text-xs text-slate-400">{user.role}</p>
+              {department && <p className="truncate text-xs text-slate-400">{department}</p>}
             </div>
           </div>
         </div>

@@ -25,6 +25,15 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [departments, setDepartments] = useState([])
+  const [googleDepartmentId, setGoogleDepartmentId] = useState('')
+
+  useEffect(() => {
+    fetch('/api/auth/departments')
+      .then((response) => response.ok ? response.json() : [])
+      .then(setDepartments)
+      .catch(() => {})
+  }, [])
 
   // ── Handle Google OAuth redirect back to /login ──────────────────────────────
   useEffect(() => {
@@ -68,7 +77,11 @@ export default function Login() {
 
   // ── Google OAuth — browser redirect (NOT an AJAX call) ───────────────────────
   const handleGoogleSignIn = () => {
-    window.location.href = '/api/auth/google'
+    if (!googleDepartmentId) {
+      setError('Select your department before continuing with Google.')
+      return
+    }
+    window.location.href = `/api/auth/google?department_id=${encodeURIComponent(googleDepartmentId)}`
   }
 
   return (
@@ -148,6 +161,22 @@ export default function Login() {
             <div className="h-px flex-1 bg-gray-200" />
             <span className="text-xs text-gray-400">or</span>
             <div className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          <div className="mb-3">
+            <label htmlFor="google-department" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-200">Department for Google sign-in</label>
+            <select
+              id="google-department"
+              value={googleDepartmentId}
+              onChange={(event) => setGoogleDepartmentId(event.target.value)}
+              className="form-input"
+            >
+              <option value="">Select your department</option>
+              {departments.map((department) => (
+                <option key={department._id} value={department._id}>{department.name} ({department.code})</option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-slate-400">Required once for new Google accounts. Your saved department will not be changed later.</p>
           </div>
 
           {/* Google sign-in button */}
