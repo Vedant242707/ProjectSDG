@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   Search, Plus, Pencil, Trash2, X, AlertTriangle, CheckCircle2, ShieldCheck, BarChart3, Download,
 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import client from '../api/client'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -430,11 +431,6 @@ function DashboardTab() {
 
 // ─── Project report tab ──────────────────────────────────────────────────────
 
-function csvCell(value) {
-  const text = Array.isArray(value) ? value.join(', ') : String(value ?? '')
-  return `"${text.replaceAll('"', '""')}"`
-}
-
 function ProjectReportTab({ departments }) {
   const [departmentId, setDepartmentId] = useState('')
   const [academicYear, setAcademicYear] = useState('')
@@ -479,16 +475,25 @@ function ProjectReportTab({ departments }) {
       project.academic_year,
       project.type,
       project.sdg_tags.map((tag) => `SDG ${tag}`).join(', '),
-      new Date(project.approved_at).toLocaleDateString(),
+      new Date(project.approved_at),
     ])
-    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')
-    const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `approved-project-report${academicYear ? `-${academicYear.replace('/', '-')}` : ''}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows], { cellDates: true })
+    worksheet['!cols'] = [
+      { wch: 20 }, { wch: 44 }, { wch: 28 }, { wch: 18 },
+      { wch: 16 }, { wch: 18 }, { wch: 28 }, { wch: 18 },
+    ]
+    rows.forEach((_, index) => {
+      const dateCell = worksheet[`H${index + 2}`]
+      if (dateCell) dateCell.z = 'dd-mmm-yyyy'
+    })
+
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Approved projects')
+    XLSX.writeFile(
+      workbook,
+      `approved-project-report${academicYear ? `-${academicYear.replace('/', '-')}` : ''}.xlsx`,
+      { bookType: 'xlsx', cellDates: true },
+    )
   }
 
   return (
@@ -496,7 +501,7 @@ function ProjectReportTab({ departments }) {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h3 className="text-base font-semibold text-gray-900">Approved Project Report</h3>
-          <p className="mt-1 text-sm text-gray-500">Filter approved projects by department or academic year, then export the current list for Excel.</p>
+          <p className="mt-1 text-sm text-gray-500">Filter approved projects by department or academic year, then export the current list as an Excel workbook.</p>
         </div>
         <button
           type="button"

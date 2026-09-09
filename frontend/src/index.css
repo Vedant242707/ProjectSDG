@@ -139,8 +139,6 @@ body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
 .sidebar-rit-name span { margin-top: .2rem; font-size: .57rem; }
 .premium-card { width: 100%; border: 1px solid rgb(109 50 79 / .34); border-radius: 1.25rem; padding: 2rem; background: rgb(247 230 196 / .88); box-shadow: 0 24px 64px rgb(64 38 58 / .16); backdrop-filter: blur(12px); }
 .dark .premium-card { border-color: rgb(232 159 110 / .38); background: rgb(64 38 58 / .86); box-shadow: 0 24px 64px rgb(28 30 58 / .38); }
-.brand-mark { display: flex; height: 3.25rem; width: 3.25rem; align-items: center; justify-content: center; border-radius: 1rem; background: var(--terracotta); color: var(--warm-cream); font-size: 1.25rem; font-weight: 700; box-shadow: 0 8px 20px rgb(109 50 79 / .26); }
-.dark .brand-mark { background: var(--warm-peach); color: var(--deep-navy); }
 .eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .14em; color: var(--muted-burgundy); }
 .form-label { display: block; margin-bottom: .45rem; font-size: .8rem; font-weight: 600; color: var(--dark-plum); }
 .dark .form-label { color: var(--warm-peach); }
