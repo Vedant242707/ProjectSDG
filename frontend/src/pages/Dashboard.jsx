@@ -8,22 +8,23 @@ const SDG_COLORS = Array(17).fill('#B85C4A')
 
 // ─── SDG Card — just name + total count ───────────────────────────────────────
 
-function SdgCard({ sdg }) {
+function SdgCard({ sdg, embedded }) {
   const navigate = useNavigate()
   const [opening, setOpening] = useState(false)
   const total = sdg.total_approved ?? 0
   const color = SDG_COLORS[sdg.sdg_number - 1]
+  const detailPath = embedded ? `/dashboard/sdg/${sdg.sdg_number}` : `/sdg/${sdg.sdg_number}`
 
   const openDetail = (event) => {
     event.preventDefault()
     if (opening) return
     setOpening(true)
-    window.setTimeout(() => navigate(`/sdg/${sdg.sdg_number}`), 360)
+    window.setTimeout(() => navigate(detailPath), 360)
   }
 
   return (
     <Link
-      to={`/sdg/${sdg.sdg_number}`}
+      to={detailPath}
       onClick={openDetail}
       className={`goal-card group relative flex flex-col overflow-hidden rounded-2xl border border-cyan-100 bg-white shadow-[0_8px_24px_rgba(184,92,74,0.16)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(184,92,74,0.28)] dark:border-cyan-900/60 dark:bg-slate-900 ${opening ? 'goal-card-opening' : ''}`}
     >
@@ -96,7 +97,7 @@ export default function Dashboard({ embedded = false }) {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {sdgs.map(sdg => <SdgCard key={sdg.sdg_number} sdg={sdg} />)}
+              {sdgs.map(sdg => <SdgCard key={sdg.sdg_number} sdg={sdg} embedded={embedded} />)}
             </div>
           )}
         </section>

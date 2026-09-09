@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { Check, CheckCircle2, Eye, EyeOff, Mail, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import client from '../api/client'
+import ritLogo from '../assets/rit-logo-transparent.png'
+import ritCrest from '../assets/rit-crest-transparent.png'
 
 const COLLEGE_DOMAIN = '@msrit.edu'
 
@@ -83,7 +85,16 @@ export default function Register() {
   return (
     <div className="premium-page py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center"><div className="brand-mark mx-auto mb-4">S</div><p className="eyebrow">MSRIT · SDG WORKFLOW</p><h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Create your account</h1><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">A focused space for meaningful work.</p></div>
+        <div className="mb-8 text-center">
+          <img className="register-rit-logo register-rit-logo-light mx-auto mb-4" src={ritLogo} alt="Ramaiah Institute of Technology" />
+          <div className="register-rit-logo-dark mx-auto mb-4" aria-label="Ramaiah Institute of Technology">
+            <img src={ritCrest} alt="" />
+            <span><strong>RAMAIAH</strong>Institute of Technology</span>
+          </div>
+          <p className="eyebrow">MSRIT · SDG WORKFLOW</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Create your account</h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">A focused space for meaningful work.</p>
+        </div>
         <div className="premium-card">
           {error && <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">{error}</div>}
           {message && <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300">{message}</div>}

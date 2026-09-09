@@ -38,6 +38,10 @@ export default function App() {
                 element={<ProtectedRoute><Dashboard embedded /></ProtectedRoute>}
               />
               <Route
+                path="/dashboard/sdg/:number"
+                element={<ProtectedRoute><SdgDetail embedded /></ProtectedRoute>}
+              />
+              <Route
                 path="/submissions"
                 element={<ProtectedRoute><MySubmissions /></ProtectedRoute>}
               />

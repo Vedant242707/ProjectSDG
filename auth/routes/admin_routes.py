@@ -8,6 +8,7 @@ from models.user import User, Role
 from models.department import Department
 from models.notification import Notification
 from models.submission import Submission, SubmissionStatus
+from models.repository import Repository
 from auth.models.schemas import (
     UpdateRoleRequest,
     CreateDepartmentRequest,
@@ -154,6 +155,54 @@ async def update_user_role(
 
 
 # ---------- Department Management ----------
+
+@router.get("/project-report/filters")
+async def project_report_filters(admin: User = Depends(require_admin)):
+    """Return the available academic years for the administrator's project report."""
+    years = await Repository.get_motor_collection().distinct("academic_year")
+    return {"academic_years": sorted((year for year in years if year), reverse=True)}
+
+
+@router.get("/project-report")
+async def project_report(
+    department_id: Optional[str] = Query(default=None),
+    academic_year: Optional[str] = Query(default=None),
+    admin: User = Depends(require_admin),
+):
+    """
+    Return approved projects for the administrator's department/year report.
+    This deliberately reads from the immutable repository, so drafts, review
+    records, and rejected submissions are never included in an exported report.
+    """
+    query = {}
+    if department_id:
+        try:
+            query["department_id"] = PydanticObjectId(department_id)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid department ID",
+            )
+    if academic_year:
+        query["academic_year"] = academic_year
+
+    projects = await Repository.find(query).sort("-approved_at").to_list()
+    return {
+        "projects": [
+            {
+                "submission_id": project.submission_id,
+                "title": project.title,
+                "department_name": project.department_name,
+                "department_code": project.department_code,
+                "academic_year": project.academic_year,
+                "type": project.type.value,
+                "sdg_tags": project.sdg_tags,
+                "approved_at": project.approved_at.isoformat(),
+            }
+            for project in projects
+        ]
+    }
+
 
 @router.post("/departments", response_model=DepartmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_department(

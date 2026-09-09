@@ -2,6 +2,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@font-face {
+  font-family: "Rit Gotham";
+  src: url("./assets/fonts/GothamBook.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rit Gotham";
+  src: url("./assets/fonts/GothamBold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   --deep-navy: #1C1E3A;
   --dark-plum: #40263A;
@@ -101,6 +115,28 @@ body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
   background: radial-gradient(circle at top, var(--warm-cream) 0%, rgb(232 159 110 / .35) 100%);
 }
 .dark .premium-page { background: radial-gradient(circle at top, var(--dark-plum) 0%, var(--deep-navy) 100%); }
+.login-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 448px); gap: 4.5rem; align-items: center; width: min(100%, 1080px); }
+.login-college-brand { padding: 1.25rem 0; }
+.login-rit-logo { display: block; width: min(100%, 470px); height: auto; }
+.login-rit-logo-dark { display: none; align-items: center; gap: 1.15rem; min-height: 157px; width: 470px; max-width: 100%; }
+.login-rit-crest { width: 126px; height: 130px; flex: 0 0 auto; }
+.login-rit-crest img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.login-rit-wordmark { color: var(--warm-cream); font-family: "Rit Gotham", Arial, sans-serif; font-size: 3.12rem; font-weight: 700; letter-spacing: .035em; line-height: .88; }
+.login-rit-wordmark span { display: block; margin-top: .68rem; font-size: 1.76rem; font-weight: 400; letter-spacing: 0; }
+.dark .login-rit-logo-light { display: none; }
+.dark .login-rit-logo-dark { display: flex; }
+.register-rit-logo { display: block; width: min(100%, 300px); height: auto; }
+.register-rit-logo-dark { display: none; align-items: center; justify-content: center; gap: .65rem; width: 300px; max-width: 100%; min-height: 92px; color: var(--warm-cream); font-family: "Rit Gotham", Arial, sans-serif; text-align: left; }
+.register-rit-logo-dark img { width: 60px; height: 68px; object-fit: contain; }
+.register-rit-logo-dark span { display: flex; flex-direction: column; font-size: 1.05rem; font-weight: 400; line-height: 1; }
+.register-rit-logo-dark strong { margin-bottom: .42rem; font-size: 1.72rem; font-weight: 700; letter-spacing: .035em; }
+.dark .register-rit-logo-light { display: none; }
+.dark .register-rit-logo-dark { display: flex; }
+.sidebar-rit-crest { width: 25px; height: 32px; flex: 0 0 auto; }
+.sidebar-rit-crest img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sidebar-rit-name { display: flex; min-width: 0; flex-direction: column; color: var(--warm-cream); font-family: Arial, sans-serif; line-height: 1; }
+.sidebar-rit-name strong { font-size: .84rem; letter-spacing: .055em; }
+.sidebar-rit-name span { margin-top: .2rem; font-size: .57rem; }
 .premium-card { width: 100%; border: 1px solid rgb(109 50 79 / .34); border-radius: 1.25rem; padding: 2rem; background: rgb(247 230 196 / .88); box-shadow: 0 24px 64px rgb(64 38 58 / .16); backdrop-filter: blur(12px); }
 .dark .premium-card { border-color: rgb(232 159 110 / .38); background: rgb(64 38 58 / .86); box-shadow: 0 24px 64px rgb(28 30 58 / .38); }
 .brand-mark { display: flex; height: 3.25rem; width: 3.25rem; align-items: center; justify-content: center; border-radius: 1rem; background: var(--terracotta); color: var(--warm-cream); font-size: 1.25rem; font-weight: 700; box-shadow: 0 8px 20px rgb(109 50 79 / .26); }
@@ -116,6 +152,7 @@ body { font-feature-settings: "cv02", "cv03", "cv04", "cv11"; }
 .secondary-button { border: 1px solid rgb(109 50 79 / .38); background: var(--warm-cream); color: var(--dark-plum); } .secondary-button:hover { background: rgb(232 159 110 / .22); }
 .dark .primary-button { background: var(--terracotta); color: var(--warm-cream); } .dark .primary-button:hover { background: var(--warm-peach); color: var(--deep-navy); }
 .dark .secondary-button { border-color: rgb(232 159 110 / .42); background: var(--dark-plum); color: var(--warm-cream); } .dark .secondary-button:hover { background: var(--muted-burgundy); }
+@media (max-width: 720px) { .login-layout { grid-template-columns: 1fr; gap: 1.5rem; } .login-college-brand { padding: 0; } .login-rit-logo { width: min(330px, 100%); } .login-rit-logo-dark { transform: scale(.72); transform-origin: left center; width: 470px; margin-bottom: -2.2rem; } }
 
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes soft-pulse { 50% { box-shadow: 0 0 0 5px rgb(232 159 110 / .18); } }

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from './NotificationBell'
+import ritCrest from '../assets/rit-crest-transparent.png'
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
 
@@ -168,11 +169,9 @@ function Sidebar({ collapsed, mobileOpen, onMobileClose, user }) {
     <div className="flex h-full flex-col bg-slate-900">
       {/* Logo */}
       <div className={`flex h-16 shrink-0 items-center border-b border-slate-700 px-4 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-slate-950">
-          S
-        </div>
+        <div className="sidebar-rit-crest" aria-hidden="true"><img src={ritCrest} alt="" /></div>
         {!collapsed && (
-          <span className="truncate text-sm font-semibold text-white">SDG Workflow</span>
+          <span className="sidebar-rit-name"><strong>RAMAIAH</strong><span>Institute of Technology</span></span>
         )}
       </div>
 

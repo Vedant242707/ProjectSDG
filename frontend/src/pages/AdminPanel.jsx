@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
-  Search, Plus, Pencil, Trash2, X, AlertTriangle, CheckCircle2, ShieldCheck, BarChart3,
+  Search, Plus, Pencil, Trash2, X, AlertTriangle, CheckCircle2, ShieldCheck, BarChart3, Download,
 } from 'lucide-react'
 import client from '../api/client'
 
@@ -286,7 +286,12 @@ function DeptFormModal({ dept, onSave, onClose }) {
 function Tabs({ active, onChange }) {
   return (
     <div className="flex border-b border-gray-200 dark:border-slate-700">
-      {[['dashboard', 'Dashboard'], ['users', 'User Management'], ['depts', 'Departments']].map(([key, label]) => (
+      {[
+        ['dashboard', 'Dashboard'],
+        ['projects', 'Project Report'],
+        ['users', 'User Management'],
+        ['depts', 'Departments'],
+      ].map(([key, label]) => (
         <button
           key={key}
           onClick={() => onChange(key)}
@@ -419,6 +424,133 @@ function DashboardTab() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Project report tab ──────────────────────────────────────────────────────
+
+function csvCell(value) {
+  const text = Array.isArray(value) ? value.join(', ') : String(value ?? '')
+  return `"${text.replaceAll('"', '""')}"`
+}
+
+function ProjectReportTab({ departments }) {
+  const [departmentId, setDepartmentId] = useState('')
+  const [academicYear, setAcademicYear] = useState('')
+  const [years, setYears] = useState([])
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadProjects = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const params = new URLSearchParams()
+      if (departmentId) params.set('department_id', departmentId)
+      if (academicYear) params.set('academic_year', academicYear)
+      const query = params.toString()
+      const { data } = await client.get(`/admin/project-report${query ? `?${query}` : ''}`)
+      setProjects(data.projects ?? [])
+    } catch (err) {
+      setProjects([])
+      setError(err.response?.data?.detail ?? 'Failed to load the project report.')
+    } finally {
+      setLoading(false)
+    }
+  }, [departmentId, academicYear])
+
+  useEffect(() => {
+    client.get('/admin/project-report/filters')
+      .then(({ data }) => setYears(data.academic_years ?? []))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => { loadProjects() }, [loadProjects])
+
+  const exportToExcel = () => {
+    const headers = ['Project ID', 'Title', 'Department', 'Department Code', 'Academic Year', 'Type', 'SDG Tags', 'Approved On']
+    const rows = projects.map((project) => [
+      project.submission_id,
+      project.title,
+      project.department_name,
+      project.department_code,
+      project.academic_year,
+      project.type,
+      project.sdg_tags.map((tag) => `SDG ${tag}`).join(', '),
+      new Date(project.approved_at).toLocaleDateString(),
+    ])
+    const csv = [headers, ...rows].map((row) => row.map(csvCell).join(',')).join('\r\n')
+    const blob = new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `approved-project-report${academicYear ? `-${academicYear.replace('/', '-')}` : ''}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900">Approved Project Report</h3>
+          <p className="mt-1 text-sm text-gray-500">Filter approved projects by department or academic year, then export the current list for Excel.</p>
+        </div>
+        <button
+          type="button"
+          onClick={exportToExcel}
+          disabled={projects.length === 0}
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Download className="h-4 w-4" />
+          Export to Excel
+        </button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Department
+          <select value={departmentId} onChange={(event) => setDepartmentId(event.target.value)} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">All departments</option>
+            {departments.map((department) => <option key={department._id} value={department._id}>{department.name} ({department.code})</option>)}
+          </select>
+        </label>
+        <label className="block text-sm font-medium text-gray-700">
+          Academic year
+          <select value={academicYear} onChange={(event) => setAcademicYear(event.target.value)} className="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">All academic years</option>
+            {years.map((year) => <option key={year} value={year}>{year}</option>)}
+          </select>
+        </label>
+      </div>
+
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <table className="w-full min-w-[760px] bg-white">
+          <thead className="bg-gray-50">
+            <tr><Th>Project ID</Th><Th>Title</Th><Th>Department</Th><Th>Academic Year</Th><Th>SDGs</Th><Th>Approved On</Th></tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {!loading && projects.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No approved projects match these filters.</td></tr>
+            )}
+            {projects.map((project) => (
+              <tr key={project.submission_id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
+                <Td><span className="font-mono text-xs">{project.submission_id}</span></Td>
+                <Td className="font-medium">{project.title}</Td>
+                <Td>{project.department_name} <span className="text-xs text-gray-500">({project.department_code})</span></Td>
+                <Td>{project.academic_year || '—'}</Td>
+                <Td>{project.sdg_tags.map((tag) => `SDG ${tag}`).join(', ')}</Td>
+                <Td>{new Date(project.approved_at).toLocaleDateString()}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-gray-500">{loading ? 'Loading projects…' : `${projects.length} approved project${projects.length === 1 ? '' : 's'} shown`}</p>
     </div>
   )
 }
@@ -740,6 +872,7 @@ export default function AdminPanel() {
         <Tabs active={tab} onChange={setTab} />
         <div className="p-5">
           {tab === 'dashboard' && <DashboardTab />}
+          {tab === 'projects' && <ProjectReportTab departments={allDepts} />}
           {tab === 'users' && <UsersTab departments={allDepts} />}
           {tab === 'depts' && <DeptsTab users={allUsers} />}
         </div>

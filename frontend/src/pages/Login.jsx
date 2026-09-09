@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff } from 'lucide-react'
+import ritLogo from '../assets/rit-logo-transparent.png'
+import ritCrest from '../assets/rit-crest-transparent.png'
 
 const ROLE_HOME = {
   ADMIN: '/admin',
@@ -70,14 +72,15 @@ export default function Login() {
   }
 
   return (
-    <div className="premium-page">
-      <div className="w-full max-w-md">
-        {/* Logo / wordmark */}
-        <div className="mb-8 text-center">
-          <div className="brand-mark mx-auto mb-4">S</div>
+    <div className="premium-page login-page">
+      <div className="login-layout">
+        <div className="login-college-brand">
+          <img className="login-rit-logo login-rit-logo-light" src={ritLogo} alt="Ramaiah Institute of Technology" />
+          <div className="login-rit-logo-dark" aria-label="Ramaiah Institute of Technology">
+            <div className="login-rit-crest"><img src={ritCrest} alt="" /></div>
+            <div className="login-rit-wordmark">RAMAIAH<span>Institute of Technology</span></div>
+          </div>
           <p className="eyebrow">MSRIT · SDG WORKFLOW</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Welcome back</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Sign in to continue your work.</p>
         </div>
 
         <div className="premium-card">
@@ -170,10 +173,6 @@ export default function Login() {
             </Link>
           </p>
         </div>
-
-        <p className="mt-6 text-center text-xs text-gray-400">
-          MSRIT · SDG Workflow Management System
-        </p>
       </div>
     </div>
   )

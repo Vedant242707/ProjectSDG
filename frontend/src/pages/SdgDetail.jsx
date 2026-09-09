@@ -10,7 +10,7 @@ const SDG_COLORS = Array(17).fill('#B85C4A')
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function SdgDetail() {
+export default function SdgDetail({ embedded = false }) {
   const { number } = useParams()
   const sdgNumber = parseInt(number, 10)
 
@@ -34,9 +34,9 @@ export default function SdgDetail() {
   }, [sdgNumber])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={embedded ? '' : 'min-h-screen bg-gray-50'}>
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
+      {!embedded && <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">S</div>
@@ -50,12 +50,12 @@ export default function SdgDetail() {
             Sign in
           </Link>
         </div>
-      </header>
+      </header>}
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Back link */}
         <Link
-          to="/"
+          to={embedded ? '/dashboard' : '/'}
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
         >
           <ArrowLeft className="h-4 w-4" />
