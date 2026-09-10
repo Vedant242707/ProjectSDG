@@ -6,25 +6,11 @@ from models.user import Role
 # ---------- Auth Schemas ----------
 
 class RegisterRequest(BaseModel):
-    college_id: str = Field(..., min_length=1)
+    full_name: str = Field(..., min_length=2)
     email: str = Field(..., min_length=1)
     password: str = Field(..., min_length=6)
     confirm_password: str = Field(..., min_length=6)
     department_id: str = Field(..., min_length=1)  # user-selected at registration
-    verification_token: str = Field(..., min_length=20)
-
-
-class SendOtpRequest(BaseModel):
-    email: str = Field(..., min_length=1)
-
-
-class VerifyOtpRequest(BaseModel):
-    email: str = Field(..., min_length=1)
-    otp: str = Field(..., pattern=r"^\d{6}$")
-
-
-class VerifyOtpResponse(BaseModel):
-    verification_token: str
 
 
 class LoginRequest(BaseModel):
@@ -49,6 +35,7 @@ class TokenResponse(BaseModel):
 class UserResponse(BaseModel):
     id: str = Field(..., alias="_id")
     college_id: str
+    full_name: str = ""
     email: str
     role: Role
     department_ids: List[str]

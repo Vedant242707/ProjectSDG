@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogIn } from 'lucide-react'
+import { LogIn, Mail, Play } from 'lucide-react'
+import ritCrest from '../assets/rit-crest-transparent.png'
 
 // ─── SDG metadata ──────────────────────────────────────────────────────────────
 
@@ -68,9 +69,8 @@ export default function Dashboard({ embedded = false }) {
       {!embedded && <header className="border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-800 dark:bg-slate-950/85">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white dark:bg-slate-100 dark:text-slate-950">S</div>
-            <span className="font-semibold text-slate-900 dark:text-white">SDG Workflow</span>
-            <span className="hidden text-sm text-gray-400 sm:block">· MSRIT</span>
+            <img src={ritCrest} alt="Ramaiah Institute of Technology" className="h-9 w-9 object-contain" />
+            <span className="flex flex-col leading-none text-slate-900 dark:text-amber-100"><strong className="text-sm tracking-wide">RAMAIAH</strong><span className="mt-1 text-[10px] font-medium tracking-wide">Institute of Technology</span></span>
           </div>
           <Link
             to="/login"
@@ -102,6 +102,31 @@ export default function Dashboard({ embedded = false }) {
           )}
         </section>
       </main>
+
+      {!embedded && (
+        <footer className="border-t border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-950/70">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 md:grid-cols-2 lg:px-8">
+            <div className="border-b border-slate-200 pb-8 dark:border-slate-800 md:border-b-0 md:border-r md:pb-0 md:pr-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#B85C4A]">Designed and Directed By</p>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="text-base font-semibold text-slate-900 dark:text-amber-50">Dr. Krishna Raj P. M.</span>
+                <SocialLink href="https://www.youtube.com/@krishnarajpm" label="Dr. Krishna Raj P. M. on YouTube"><Play className="h-4 w-4 fill-current" /></SocialLink>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#B85C4A]">Developed By</p>
+              <div className="mt-3 space-y-3">
+                <div className="flex flex-wrap items-center gap-3"><span className="text-base font-semibold text-slate-900 dark:text-amber-50">Vedant Pabari</span><SocialLink href="https://www.linkedin.com/in/vedant-pabari-a25ab434a/" label="Vedant Pabari on LinkedIn"><span className="text-[10px] font-extrabold">in</span></SocialLink><SocialLink href="mailto:pabarivedant@gmail.com" label="Email Vedant Pabari"><Mail className="h-4 w-4" /></SocialLink></div>
+                <div className="flex items-center gap-3"><span className="text-base font-semibold text-slate-900 dark:text-amber-50">Krish Kumar Sharma</span><SocialLink href="https://www.linkedin.com/in/krish-kumar-sharma-842419378/" label="Krish Kumar Sharma on LinkedIn"><span className="text-[10px] font-extrabold">in</span></SocialLink><SocialLink href="https://github.com/Quantum-Blade1" label="Krish Kumar Sharma on GitHub"><span className="text-[10px] font-extrabold">GH</span></SocialLink></div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      )}
     </div>
   )
+}
+
+function SocialLink({ href, label, children }) {
+  return <a href={href} target="_blank" rel="noreferrer" aria-label={label} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[#B85C4A]/35 text-[#B85C4A] transition hover:-translate-y-0.5 hover:border-[#B85C4A] hover:bg-[#B85C4A] hover:text-white">{children}</a>
 }

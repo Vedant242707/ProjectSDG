@@ -39,6 +39,7 @@ export function AuthProvider({ children }) {
         ...baseUser,
         email: data.email || baseUser.email,
         college_id: data.college_id || '',
+        full_name: data.full_name || '',
         department: data.department ?? null,
       }
       localStorage.setItem(KEYS.USER, JSON.stringify(userData))
@@ -125,14 +126,13 @@ export function AuthProvider({ children }) {
     return userData
   }
 
-  const register = async (college_id, email, password, confirm_password, department_id, verification_token) => {
+  const register = async (full_name, email, password, confirm_password, department_id) => {
     const { data } = await client.post('/auth/register', {
-      college_id,
+      full_name,
       email,
       password,
       confirm_password,
       ...(department_id ? { department_id } : {}),
-      verification_token,
     })
     return data
   }

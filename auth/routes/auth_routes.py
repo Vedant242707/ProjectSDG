@@ -17,15 +17,11 @@ from models.user import User, Role
 from models.refresh_token import RefreshToken
 from auth.models.schemas import (
     RegisterRequest,
-    LoginRequest,
     RefreshRequest,
     LogoutRequest,
     TokenResponse,
     UserResponse,
     MessageResponse,
-    SendOtpRequest,
-    VerifyOtpRequest,
-    VerifyOtpResponse,
 )
 from auth.services.auth_service import (
     hash_password,
@@ -37,11 +33,6 @@ from auth.services.auth_service import (
     rotate_refresh_token,
 )
 from auth.dependencies.auth_deps import get_current_user
-from auth.services.email_verification_service import (
-    consume_registration_token,
-    create_and_send_otp,
-    verify_otp,
-)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -58,37 +49,13 @@ def _user_to_response(user: User) -> dict:
     return {
         "_id": str(user.id),
         "college_id": user.college_id,
+        "full_name": user.full_name,
         "email": user.email,
         "role": user.role,
         "department_ids": [str(d) for d in user.department_ids],
         "is_active": user.is_active,
         "created_at": user.created_at.isoformat(),
     }
-
-
-@router.post("/registration/send-otp", response_model=MessageResponse)
-async def send_registration_otp(body: SendOtpRequest):
-    email = body.email.strip().lower()
-    if not _is_college_email(email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Only @{settings.COLLEGE_EMAIL_DOMAIN} email addresses are allowed")
-    if await User.find_one(User.email == email):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email is already registered")
-    try:
-        await create_and_send_otp(email)
-    except RuntimeError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc))
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unable to send the verification email. Please try again later.")
-    return MessageResponse(message="Verification code sent. It expires in 10 minutes.")
-
-
-@router.post("/registration/verify-otp", response_model=VerifyOtpResponse)
-async def verify_registration_otp(body: VerifyOtpRequest):
-    email = body.email.strip().lower()
-    token = await verify_otp(email, body.otp)
-    if not token:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid, expired, or exhausted verification code")
-    return VerifyOtpResponse(verification_token=token)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -100,6 +67,10 @@ async def register(body: RegisterRequest):
             detail=f"Only @{settings.COLLEGE_EMAIL_DOMAIN} email addresses are allowed",
         )
 
+    full_name = body.full_name.strip()
+    if len(full_name) < 2:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Full name is required")
+
     # Validate password match
     if body.password != body.confirm_password:
         raise HTTPException(
@@ -108,16 +79,6 @@ async def register(body: RegisterRequest):
         )
 
     email = body.email.strip().lower()
-    if not await consume_registration_token(email, body.verification_token):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Verify your email before creating an account")
-
-    # Check unique college_id
-    existing_cid = await User.find_one(User.college_id == body.college_id)
-    if existing_cid:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="College ID is already registered",
-        )
 
     # Check unique email
     existing_email = await User.find_one(User.email == email)
@@ -138,9 +99,15 @@ async def register(body: RegisterRequest):
     if not dept:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Selected department does not exist")
 
+    college_id_candidate = email.split("@")[0]
+    if await User.find_one(User.college_id == college_id_candidate):
+        import uuid
+        college_id_candidate = f"{college_id_candidate[:8]}_{uuid.uuid4().hex[:6]}"
+
     # Create user with their selected department.
     user = User(
-        college_id=body.college_id,
+        college_id=college_id_candidate,
+        full_name=full_name,
         email=email,
         hashed_password=hash_password(body.password),
         role=Role.SUBMITTER,
@@ -400,6 +367,7 @@ async def google_oauth_callback(code: str = None, state: str = None, error: str 
 
         user = User(
             college_id=college_id_candidate,
+            full_name=id_info.get("name", email_prefix).strip() or email_prefix,
             email=google_email,
             # Empty string — not a valid bcrypt hash, so password login is blocked for OAuth users
             hashed_password="",

@@ -15,6 +15,7 @@ class Role(str, Enum):
 
 class User(Document):
     college_id: str
+    full_name: str = ""
     email: str
     hashed_password: str
     role: Role = Role.SUBMITTER

@@ -113,14 +113,15 @@ function UserDropdown({ user, onLogout }) {
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-white">
           {user.email?.[0]?.toUpperCase() ?? 'U'}
         </span>
-        <span className="hidden max-w-[120px] truncate sm:block">{user.email}</span>
+        <span className="hidden max-w-[120px] truncate sm:block">{user.full_name || user.email}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
           <div className="border-b border-gray-100 px-4 py-3">
-            <p className="truncate text-sm font-medium text-gray-900">{user.email}</p>
+            {user.full_name && <p className="truncate text-sm font-medium text-gray-900">{user.full_name}</p>}
+            <p className="truncate text-xs text-gray-500">{user.email}</p>
             <div className="mt-2">
               <RoleBadge role={user.role} />
             </div>
@@ -205,7 +206,8 @@ function Sidebar({ collapsed, mobileOpen, onMobileClose, user }) {
               {user.email?.[0]?.toUpperCase() ?? 'U'}
             </span>
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium text-slate-200">{user.email}</p>
+              <p className="truncate text-xs font-medium text-slate-200">{user.full_name || user.email}</p>
+              {user.full_name && <p className="truncate text-xs text-slate-400">{user.email}</p>}
               <p className="truncate text-xs text-slate-400">{user.role}</p>
               {department && <p className="truncate text-xs text-slate-400">{department}</p>}
             </div>

@@ -14,7 +14,6 @@ from models.workflow_event import WorkflowEvent
 from models.notification import Notification
 from models.repository import Repository
 from models.submission_counter import SubmissionCounter
-from models.email_verification import EmailVerification
 from auth.routes.auth_routes import router as auth_router
 from auth.routes.admin_routes import router as admin_router
 from core.routes.submission_routes import router as submission_router
@@ -41,7 +40,6 @@ async def lifespan(app: FastAPI):
             Notification,
             Repository,
             SubmissionCounter,
-            EmailVerification,
         ],
     )
     print(f"Connected to MongoDB: {settings.DB_NAME}")

@@ -27,6 +27,7 @@ def _user_to_response(user: User) -> dict:
     return {
         "_id": str(user.id),
         "college_id": user.college_id,
+        "full_name": user.full_name,
         "email": user.email,
         "role": user.role,
         "department_ids": [str(d) for d in user.department_ids],
@@ -60,6 +61,7 @@ async def search_users(
             {
                 "$or": [
                     {"college_id": {"$regex": pattern, "$options": "i"}},
+                    {"full_name": {"$regex": pattern, "$options": "i"}},
                     {"email": {"$regex": pattern, "$options": "i"}},
                 ]
             }
