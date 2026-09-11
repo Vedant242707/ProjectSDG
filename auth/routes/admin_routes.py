@@ -102,8 +102,11 @@ async def update_user_role(
             )
         new_dept_oids.append(PydanticObjectId(dept_id_str))
 
-    # Track old department_ids for HOD cleanup
-    old_dept_ids = set(str(d) for d in user.department_ids)
+    # Department.hod_user_id is the routing source of truth. Read every
+    # reference before changing the user so stale records are also repaired.
+    assigned_hod_departments = await Department.find(
+        Department.hod_user_id == user.id
+    ).to_list()
     new_dept_ids = set(body.department_ids)
 
     # Update user
@@ -131,11 +134,17 @@ async def update_user_role(
                 dept.hod_user_id = user.id
                 await dept.save()
 
-        # Clear HOD from departments user was removed from
-        removed_depts = old_dept_ids - new_dept_ids
-        for dept_id_str in removed_depts:
-            dept = await Department.get(PydanticObjectId(dept_id_str))
-            if dept and dept.hod_user_id == user.id:
+        # Clear every previously assigned department the admin did not keep.
+        # This uses the department records rather than only user.department_ids,
+        # so a legacy/stale HOD reference cannot remain in the panel or routing.
+        for dept in assigned_hod_departments:
+            if str(dept.id) not in new_dept_ids and dept.hod_user_id == user.id:
+                dept.hod_user_id = None
+                await dept.save()
+    else:
+        # Removing an HOD role must also remove every department reference.
+        for dept in assigned_hod_departments:
+            if dept.hod_user_id == user.id:
                 dept.hod_user_id = None
                 await dept.save()
     

@@ -100,21 +100,44 @@ function ConfirmModal({ title, message, confirmLabel = 'Confirm', danger = false
 
 function AssignRoleModal({ user, departments, onSave, onClose }) {
   const [role, setRole]       = useState(user.role)
-  const [deptId, setDeptId]   = useState(user.department_ids?.[0] ?? '')
+  const existingHodDeptIds = [...new Set([
+    ...(user.department_ids ?? []),
+    ...departments.filter((department) => department.hod_user_id === user._id).map((department) => department._id),
+  ])]
+  const [deptIds, setDeptIds] = useState(existingHodDeptIds)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
 
-  // SUBMITTER and HOD both need a department; SDG_COMMITTEE does not
-  const needsDept = role === 'HOD' || role === 'SUBMITTER'
+  const needsDepartment = role === 'HOD' || role === 'SUBMITTER'
+  const selectedDepartments = departments.filter((department) => deptIds.includes(department._id))
+  const removedHodDepartments = departments.filter((department) => (
+    existingHodDeptIds.includes(department._id) && (role !== 'HOD' || !deptIds.includes(department._id))
+  ))
+
+  const updateRole = (nextRole) => {
+    setRole(nextRole)
+    if (nextRole === 'SDG_COMMITTEE') setDeptIds([])
+    if (nextRole === 'SUBMITTER') setDeptIds((current) => current.slice(0, 1))
+  }
+
+  const toggleDepartment = (departmentId) => {
+    setDeptIds((current) => current.includes(departmentId)
+      ? current.filter((id) => id !== departmentId)
+      : [...current, departmentId])
+  }
 
   const handleSave = async () => {
-    if (needsDept && !deptId) { setError('Please select a department.'); return }
+    if (needsDepartment && !deptIds.length) { setError('Please select at least one department.'); return }
+    if (role === 'SUBMITTER' && deptIds.length > 1) { setError('A submitter can have only one department.'); return }
+    if (removedHodDepartments.length && !window.confirm(
+      `Remove ${user.email} as HOD for ${removedHodDepartments.map((department) => department.code).join(', ')}?`
+    )) return
     setError('')
     setLoading(true)
     try {
       await onSave(user._id, {
         role,
-        department_ids: needsDept ? [deptId] : [],
+        department_ids: role === 'HOD' ? deptIds : role === 'SUBMITTER' ? deptIds.slice(0, 1) : [],
       })
       onClose()
     } catch (err) {
@@ -123,8 +146,6 @@ function AssignRoleModal({ user, departments, onSave, onClose }) {
       setLoading(false)
     }
   }
-
-  const selectedDept = departments.find((d) => d._id === deptId)
 
   return (
     <Modal onClose={onClose}>
@@ -149,7 +170,7 @@ function AssignRoleModal({ user, departments, onSave, onClose }) {
           <label className="mb-1.5 block text-sm font-medium text-gray-700">New Role</label>
           <select
             value={role}
-            onChange={(e) => { setRole(e.target.value); setDeptId('') }}
+            onChange={(e) => updateRole(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             {ASSIGNABLE_ROLES.map((r) => (
@@ -161,31 +182,41 @@ function AssignRoleModal({ user, departments, onSave, onClose }) {
           )}
         </div>
 
-        {needsDept && (
+        {role === 'HOD' && (
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Department <span className="text-red-500">*</span>
+              HOD departments <span className="text-red-500">*</span>
             </label>
-            <select
-              value={deptId}
-              onChange={(e) => setDeptId(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="">— Select department —</option>
-              {departments.map((d) => (
-                <option key={d._id} value={d._id}>{d.name} ({d.code})</option>
+            <p className="mb-2 text-xs text-gray-500">Select every department this person should continue to lead. Unselected departments will be cleared after confirmation.</p>
+            <div className="max-h-52 space-y-1 overflow-y-auto rounded-lg border border-gray-300 p-2">
+              {departments.map((department) => (
+                <label key={department._id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50">
+                  <input type="checkbox" checked={deptIds.includes(department._id)} onChange={() => toggleDepartment(department._id)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span>{department.name} ({department.code})</span>
+                </label>
               ))}
+            </div>
+          </div>
+        )}
+
+        {role === 'SUBMITTER' && (
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">Department <span className="text-red-500">*</span></label>
+            <select value={deptIds[0] ?? ''} onChange={(e) => setDeptIds(e.target.value ? [e.target.value] : [])} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              <option value="">— Select department —</option>
+              {departments.map((department) => <option key={department._id} value={department._id}>{department.name} ({department.code})</option>)}
             </select>
           </div>
         )}
       </div>
 
       {/* Confirmation summary */}
-      {(role !== user.role || deptId !== (user.department_ids?.[0] ?? '')) && (
+      {(role !== user.role || deptIds.join(',') !== existingHodDeptIds.join(',')) && (
         <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
           <CheckCircle2 className="mb-1 inline h-4 w-4" />
           {' '}Assign <strong>{role}</strong> to <strong>{user.email}</strong>
-          {needsDept && selectedDept && <> for <strong>{selectedDept.name}</strong></>}
+          {needsDepartment && selectedDepartments.length > 0 && <> for <strong>{selectedDepartments.map((department) => department.code).join(', ')}</strong></>}
+          {removedHodDepartments.length > 0 && <p className="mt-2 text-xs">Will remove HOD assignment from: {removedHodDepartments.map((department) => department.code).join(', ')}.</p>}
         </div>
       )}
 
